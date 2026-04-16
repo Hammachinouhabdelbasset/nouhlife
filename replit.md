@@ -42,6 +42,16 @@ A production-grade all-in-one personal operating system — productivity, second
 - `goals` — Goal tracking
 - `daily_plans` — Daily planning entries
 
+## Authentication
+
+- Powered by **Clerk** (auto-provisioned, keys in env vars)
+- Flows: Email/password, Google OAuth, Sign up, Sign in, Sign out
+- Landing page at `/` for unauthenticated users → redirects to `/dashboard` when signed in
+- All API routes protected with `requireAuth` middleware (filters by `userId`)
+- All DB tables have `userId` column for full multi-tenant data isolation
+- To manage users, view sign-ups, ban users, or enable/disable OAuth providers → use the **Auth pane** in the workspace toolbar
+- Sessions managed by Clerk via secure httpOnly cookies
+
 ## Key Commands
 
 - `pnpm run typecheck` — full typecheck across all packages

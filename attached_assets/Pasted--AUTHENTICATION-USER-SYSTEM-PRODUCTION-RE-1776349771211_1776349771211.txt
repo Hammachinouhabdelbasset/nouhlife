@@ -1,0 +1,298 @@
+====================================================
+🔐 AUTHENTICATION + USER SYSTEM (PRODUCTION READY)
+====================================================
+Build a fully production-ready authentication and user management system.
+
+IMPORTANT:
+- Use REAL database persistence
+- NO mock users
+- NO fake local arrays
+- NO placeholder auth
+- Every signup must create a real database user
+- Every login must validate real hashed credentials
+- Every user’s workspace data must be isolated by userId
+- Use scalable SaaS multi-tenant architecture
+
+Auth flows:
+- Sign up
+- Login
+- Logout
+- Forgot password
+- Reset password
+- Change password
+- Email verification
+- Session expiration
+- Remember me
+- Social login (Google + GitHub)
+- Optional magic link login
+- 2FA ready architecture
+
+User fields:
+- id (UUID)
+- full name
+- username
+- email
+- password hash
+- avatar
+- bio
+- timezone
+- locale
+- role
+- subscription tier
+- createdAt
+- updatedAt
+- lastLoginAt
+- emailVerified
+- onboardingCompleted
+- settings JSON
+
+Roles:
+- super_admin
+- admin
+- normal_user
+
+Use:
+- Auth.js or Clerk
+- Prisma
+- PostgreSQL
+- bcrypt
+- JWT + secure httpOnly cookies
+- refresh token strategy
+- CSRF protection
+- rate limiting
+- device session management
+
+====================================================
+🎨 LOGIN / SIGNUP UI (PREMIUM SaaS STYLE)
+====================================================
+Design world-class authentication pages inspired by:
+- Linear
+- Notion
+- Vercel
+- Stripe
+- Clerk
+
+Pages:
+1) Login
+2) Sign up
+3) Forgot password
+4) Reset password
+5) Verify email
+6) Complete onboarding
+
+UI requirements:
+- split-screen premium layout
+- dark modern theme
+- animated gradient background
+- glassmorphism auth card
+- smooth transitions
+- strong input validation
+- password strength meter
+- show/hide password
+- loading states
+- OAuth buttons
+- trust badges
+- testimonials section
+- security message
+- responsive mobile version
+- accessibility compliant
+- keyboard navigation
+- error toasts
+- success states
+
+Signup fields:
+- full name
+- username
+- email
+- password
+- confirm password
+- agree to terms
+- optional goal category
+- profession
+- engineering interests
+- content niche
+- country
+- timezone
+
+====================================================
+🧠 USER ONBOARDING FLOW
+====================================================
+After signup, guide the user through onboarding:
+
+Step 1: Goals
+- engineering growth
+- content growth
+- money discipline
+- life balance
+- startup building
+- learning roadmap
+
+Step 2: Productivity style
+- deep work
+- time blocking
+- agile sprint
+- GTD
+- habit-first
+
+Step 3: Dashboard preferences
+- finance widgets
+- content widgets
+- engineering widgets
+- planner widgets
+- goals widgets
+
+Step 4: Initial setup
+- create first project
+- create first weekly goal
+- create first content idea
+- create first savings goal
+
+Save onboarding choices in database.
+
+====================================================
+🛡️ ADMIN PANEL (SUPER ADMIN)
+====================================================
+Create a professional admin dashboard accessible only to super_admin.
+
+Pages:
+- admin overview
+- users management
+- subscriptions
+- content moderation
+- analytics
+- system health
+- audit logs
+- feature flags
+- support tickets
+- database monitor
+
+Admin features:
+- list all users
+- search users
+- filter by plan
+- see signup dates
+- see active sessions
+- suspend account
+- delete account
+- change roles
+- reset password manually
+- impersonate user (securely)
+- export users CSV
+- view workspace usage
+- storage usage
+- AI token usage
+- failed login attempts
+- suspicious activity alerts
+
+Metrics:
+- DAU
+- WAU
+- MAU
+- retention
+- churn
+- feature adoption
+- goal completion rate
+- task completion rate
+- revenue metrics
+- conversion funnel
+
+====================================================
+🗄️ DATABASE ARCHITECTURE (SCALABLE)
+====================================================
+Use PostgreSQL + Prisma with proper relations.
+
+Core tables:
+- users
+- sessions
+- accounts
+- verification_tokens
+- workspaces
+- tasks
+- projects
+- goals
+- habits
+- finances
+- content_items
+- notes
+- files
+- notifications
+- audit_logs
+- admin_actions
+- subscriptions
+- api_keys
+- integrations
+
+Rules:
+- all tables must contain userId relation where needed
+- soft delete support
+- createdAt / updatedAt indexes
+- pagination-ready queries
+- optimistic UI support
+- transactions for critical actions
+- backup-ready schema
+- analytics event table
+
+====================================================
+⚙️ BACKEND SCALE + SECURITY
+====================================================
+Implement:
+- RBAC middleware
+- route guards
+- API rate limiting
+- Redis caching
+- background jobs
+- queue system
+- email service
+- notification service
+- audit middleware
+- structured logging
+- error tracking
+- retry mechanisms
+- S3 compatible storage
+- signed uploads
+- database migrations
+- seed scripts
+- environment validation
+- monitoring hooks
+- health check endpoints
+
+Use:
+- Upstash Redis
+- Resend email
+- Sentry
+- Zod
+- BullMQ or Trigger.dev
+- AWS S3 / Supabase storage
+
+====================================================
+🚀 DEPLOYMENT + DEVOPS
+====================================================
+Production-ready deployment:
+- Vercel frontend/backend
+- Neon/Supabase PostgreSQL
+- Redis
+- secure environment variables
+- CI/CD pipeline
+- GitHub actions
+- staging + production
+- backup automation
+- uptime monitoring
+- domain + SSL
+- CDN assets
+- image optimization
+
+====================================================
+📁 REQUIRED OUTPUT
+====================================================
+Generate:
+1) auth folder structure
+2) Prisma schema for auth/admin
+3) middleware protection
+4) login/signup pages
+5) session handling
+6) admin panel layouts
+7) database migration files
+8) seed super_admin account
+9) API routes
+10) production security checklist
+11) scalable deployment checklist

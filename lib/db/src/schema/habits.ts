@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const habitsTable = pgTable("habits", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"),
   name: text("name").notNull(),
   description: text("description"),
   frequency: text("frequency").notNull().default("daily"),
@@ -17,6 +18,7 @@ export const habitsTable = pgTable("habits", {
 
 export const habitLogsTable = pgTable("habit_logs", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"),
   habitId: integer("habit_id").notNull(),
   date: text("date").notNull(),
   note: text("note"),

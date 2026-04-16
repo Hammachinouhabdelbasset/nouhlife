@@ -4,7 +4,8 @@ import { z } from "zod/v4";
 
 export const dailyPlansTable = pgTable("daily_plans", {
   id: serial("id").primaryKey(),
-  date: text("date").notNull().unique(),
+  userId: text("user_id"),
+  date: text("date").notNull(),
   mits: jsonb("mits").notNull().default([]),
   intention: text("intention"),
   energyLevel: integer("energy_level"),

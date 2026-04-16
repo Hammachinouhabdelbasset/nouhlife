@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, or, sql } from "drizzle-orm";
+import { eq, ilike, or, and } from "drizzle-orm";
 import { db, notesTable } from "@workspace/db";
 import {
   CreateNoteBody,
@@ -9,10 +9,12 @@ import {
   DeleteNoteParams,
   ListNotesQueryParams,
 } from "@workspace/api-zod";
+import { requireAuth, type AuthenticatedRequest } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
-router.get("/notes", async (req, res): Promise<void> => {
+router.get("/notes", requireAuth, async (req, res): Promise<void> => {
+  const { userId } = req as AuthenticatedRequest;
   const query = ListNotesQueryParams.safeParse(req.query);
   if (!query.success) {
     res.status(400).json({ error: query.error.message });
@@ -20,69 +22,53 @@ router.get("/notes", async (req, res): Promise<void> => {
   }
   const { category, tag, search, pinned } = query.data;
 
-  let baseQuery = db.select().from(notesTable).$dynamic();
+  const conditions: ReturnType<typeof eq>[] = [eq(notesTable.userId, userId)];
 
-  const conditions = [];
-
-  if (category) {
-    conditions.push(eq(notesTable.category, category));
-  }
-  if (pinned !== undefined) {
-    conditions.push(eq(notesTable.pinned, pinned));
-  }
+  if (category) conditions.push(eq(notesTable.category, category));
+  if (pinned !== undefined) conditions.push(eq(notesTable.pinned, pinned));
   if (search) {
     conditions.push(
       or(
         ilike(notesTable.title, `%${search}%`),
         ilike(notesTable.content, `%${search}%`),
-      ),
+      ) as ReturnType<typeof eq>,
     );
   }
 
-  if (conditions.length > 0) {
-    const { and } = await import("drizzle-orm");
-    baseQuery = baseQuery.where(and(...conditions));
-  }
-
-  let notes = await baseQuery.orderBy(notesTable.updatedAt);
-
-  if (tag) {
-    notes = notes.filter((n) => n.tags.includes(tag));
-  }
-
+  let notes = await db.select().from(notesTable).where(and(...conditions)).orderBy(notesTable.updatedAt);
+  if (tag) notes = notes.filter((n) => n.tags.includes(tag));
   res.json(notes.map(formatNote));
 });
 
-router.post("/notes", async (req, res): Promise<void> => {
+router.post("/notes", requireAuth, async (req, res): Promise<void> => {
+  const { userId } = req as AuthenticatedRequest;
   const parsed = CreateNoteBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [note] = await db
-    .insert(notesTable)
-    .values({
-      title: parsed.data.title,
-      content: parsed.data.content ?? "",
-      category: parsed.data.category,
-      subcategory: parsed.data.subcategory,
-      tags: parsed.data.tags ?? [],
-      pinned: parsed.data.pinned ?? false,
-      favorite: parsed.data.favorite ?? false,
-    })
-    .returning();
+  const [note] = await db.insert(notesTable).values({
+    userId,
+    title: parsed.data.title,
+    content: parsed.data.content ?? "",
+    category: parsed.data.category,
+    subcategory: parsed.data.subcategory,
+    tags: parsed.data.tags ?? [],
+    pinned: parsed.data.pinned ?? false,
+    favorite: parsed.data.favorite ?? false,
+  }).returning();
   res.status(201).json(formatNote(note));
 });
 
-router.get("/notes/stats", async (_req, res): Promise<void> => {
-  const allNotes = await db.select().from(notesTable);
+router.get("/notes/stats", requireAuth, async (req, res): Promise<void> => {
+  const { userId } = req as AuthenticatedRequest;
+  const allNotes = await db.select().from(notesTable).where(eq(notesTable.userId, userId));
   const byCategory: Record<string, number> = {};
   for (const note of allNotes) {
     byCategory[note.category] = (byCategory[note.category] ?? 0) + 1;
   }
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
-
   res.json({
     total: allNotes.length,
     byCategory: Object.entries(byCategory).map(([category, count]) => ({ category, count })),
@@ -91,13 +77,14 @@ router.get("/notes/stats", async (_req, res): Promise<void> => {
   });
 });
 
-router.get("/notes/:id", async (req, res): Promise<void> => {
+router.get("/notes/:id", requireAuth, async (req, res): Promise<void> => {
+  const { userId } = req as AuthenticatedRequest;
   const params = GetNoteParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const [note] = await db.select().from(notesTable).where(eq(notesTable.id, params.data.id));
+  const [note] = await db.select().from(notesTable).where(and(eq(notesTable.id, params.data.id), eq(notesTable.userId, userId)));
   if (!note) {
     res.status(404).json({ error: "Note not found" });
     return;
@@ -105,7 +92,8 @@ router.get("/notes/:id", async (req, res): Promise<void> => {
   res.json(formatNote(note));
 });
 
-router.put("/notes/:id", async (req, res): Promise<void> => {
+router.put("/notes/:id", requireAuth, async (req, res): Promise<void> => {
+  const { userId } = req as AuthenticatedRequest;
   const params = UpdateNoteParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -116,14 +104,8 @@ router.put("/notes/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [note] = await db
-    .update(notesTable)
-    .set({
-      ...parsed.data,
-      updatedAt: new Date(),
-    })
-    .where(eq(notesTable.id, params.data.id))
-    .returning();
+  const [note] = await db.update(notesTable).set({ ...parsed.data, updatedAt: new Date() })
+    .where(and(eq(notesTable.id, params.data.id), eq(notesTable.userId, userId))).returning();
   if (!note) {
     res.status(404).json({ error: "Note not found" });
     return;
@@ -131,13 +113,14 @@ router.put("/notes/:id", async (req, res): Promise<void> => {
   res.json(formatNote(note));
 });
 
-router.delete("/notes/:id", async (req, res): Promise<void> => {
+router.delete("/notes/:id", requireAuth, async (req, res): Promise<void> => {
+  const { userId } = req as AuthenticatedRequest;
   const params = DeleteNoteParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  await db.delete(notesTable).where(eq(notesTable.id, params.data.id));
+  await db.delete(notesTable).where(and(eq(notesTable.id, params.data.id), eq(notesTable.userId, userId)));
   res.sendStatus(204);
 });
 
