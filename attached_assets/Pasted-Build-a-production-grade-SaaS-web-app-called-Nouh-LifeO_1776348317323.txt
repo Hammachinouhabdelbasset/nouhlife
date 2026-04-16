@@ -1,0 +1,400 @@
+Build a production-grade SaaS web app called "Nouh LifeOS".
+
+This is NOT a simple todo app.
+
+This is an all-in-one:
+- productivity operating system
+- second brain
+- content planning studio
+- script writing workspace
+- engineering knowledge hub
+- project execution lab
+- finance tracker
+- life planner
+- habit discipline system
+- yearly goal machine
+
+The UI must feel like a premium mix of:
+- Notion
+- Linear
+- Todoist
+- Sunsama
+- TickTick
+- ClickUp
+- Motion
+- Obsidian
+- YNAB
+- Trello
+- GitHub Projects
+
+====================================================
+🎯 MAIN VISION
+====================================================
+The app helps users control every part of life:
+- tasks
+- discipline
+- habits
+- money
+- projects
+- content creation
+- engineering learning
+- embedded systems projects
+- notes
+- documentation
+- code snippets
+- script writing
+- business growth
+- long-term goals
+- weekly reviews
+- yearly planning
+
+It should feel like a “personal CEO dashboard”.
+
+====================================================
+🧠 MODULE 1 — SECOND BRAIN / KNOWLEDGE VAULT
+====================================================
+Create a powerful knowledge management system with folders and smart tagging.
+
+Sections:
+1) Engineering Lab
+- embedded systems notes
+- AVR notes
+- ESP32 notes
+- STM32 notes
+- Linux/Fedora commands
+- C/C++
+- debugging logs
+- Git notes
+- interview questions
+- competition prep
+- architecture notes
+- protocol notes
+- JSON/API notes
+- RTOS notes
+- IoT notes
+
+2) Content Studio
+- content ideas inbox
+- short-form video ideas
+- long-form content ideas
+- script drafts
+- hooks database
+- viral titles bank
+- storytelling templates
+- thumbnail ideas
+- CTA ideas
+- educational content plans
+- engineering content plans
+- personal brand ideas
+- Instagram/Reels/TikTok/YouTube planner
+
+3) Project Documentation
+- project requirements
+- architecture diagrams
+- milestones
+- sprint notes
+- task decomposition
+- bug logs
+- issue tracking
+- code snippets
+- reusable components
+- deployment checklist
+- release notes
+
+4) Business Vault
+- startup ideas
+- product ideas
+- monetization plans
+- outreach scripts
+- collaboration templates
+- client CRM notes
+- meeting notes
+
+Features:
+- markdown editor
+- rich text editor
+- code block support
+- syntax highlighting
+- file attachments
+- image paste
+- version history
+- backlinks
+- AI note summarization
+- AI idea expansion
+- AI auto-tagging
+- global search
+- filters by tag/date/project
+- favorite notes
+- pin important notes
+
+====================================================
+🎬 MODULE 2 — CONTENT PLANNING STUDIO
+====================================================
+This must be world-class.
+
+Features:
+- content calendar
+- idea inbox
+- topic clustering
+- niche buckets
+- content pillars
+- posting frequency planner
+- script writer
+- hook generator
+- CTA generator
+- storytelling flow templates
+- shot list
+- b-roll checklist
+- voiceover script area
+- caption writer
+- hashtag planner
+- platform-specific formatting
+
+Pipeline:
+Idea → Research → Script → Record → Edit → Thumbnail → Schedule → Publish → Analytics
+
+Statuses:
+- raw idea
+- researching
+- scripting
+- filming
+- editing
+- ready
+- published
+- repurpose
+- archive
+
+Each content item should include:
+- title
+- hook
+- script
+- target audience
+- pain point
+- CTA
+- platform
+- due date
+- publish date
+- KPI goals
+- actual performance
+- lessons learned
+
+AI helpers:
+- script expansion
+- better hooks
+- title optimization
+- viral angle suggestions
+- technical topic simplification
+- storytelling enhancement
+
+====================================================
+⚙️ MODULE 3 — ENGINEERING WORKSPACE
+====================================================
+Special workspace for embedded systems and software engineering.
+
+Sections:
+- project board
+- bugs
+- firmware roadmap
+- hardware TODOs
+- protocol docs
+- MCU register notes
+- ISR templates
+- drivers checklist
+- reusable HAL templates
+- test logs
+- debugging sessions
+- learning roadmap
+- interview prep
+- DSA notes
+- Linux terminal cheat sheet
+
+Project templates:
+- AVR project template
+- STM32 bare metal template
+- ESP-IDF template
+- FreeRTOS template
+- IoT backend template
+
+Each engineering project includes:
+- objective
+- deadline
+- stack
+- milestones
+- docs
+- GitHub links
+- learning blockers
+- issue logs
+- progress percentage
+- reflection notes
+
+====================================================
+📅 MODULE 4 — DAILY / WEEKLY / MONTHLY EXECUTION
+====================================================
+Include:
+- daily planner
+- weekly planner
+- monthly goals
+- quarterly OKRs
+- yearly mission board
+- priority matrix
+- time blocking
+- deep work blocks
+- MITs (most important tasks)
+- review system
+- wins tracker
+- lessons learned
+- energy tracker
+
+====================================================
+💰 MODULE 5 — MONEY TRACKER
+====================================================
+Include:
+- income
+- expenses
+- subscriptions
+- savings goals
+- emergency fund
+- investment tracker
+- monthly budget
+- yearly budget
+- project earnings
+- content earnings
+- freelance earnings
+- net worth dashboard
+
+Charts:
+- monthly spending
+- savings rate
+- category pie charts
+- cash flow
+- goal progress
+
+====================================================
+🎯 MODULE 6 — GOALS + DISCIPLINE
+====================================================
+Build:
+- habit tracker
+- streak system
+- discipline score
+- consistency score
+- missed task penalties
+- recovery plans
+- milestone rewards
+- personal KPIs
+- dopamine-safe progress visuals
+
+Goals:
+- weekly
+- monthly
+- quarterly
+- yearly
+- 3-year vision
+
+====================================================
+🛠 TECH STACK (BEST MODERN STACK)
+====================================================
+Frontend:
+- Next.js 15
+- TypeScript
+- TailwindCSS
+- shadcn/ui
+- Framer Motion
+- Zustand
+- React Query
+- TipTap editor
+- Recharts
+- FullCalendar
+- Monaco Editor
+
+Backend:
+- Next.js server actions
+- tRPC
+- Node.js
+- Prisma ORM
+
+Database:
+- PostgreSQL (Neon or Supabase)
+
+Auth:
+- Clerk or Auth.js
+
+Storage:
+- Supabase storage
+
+AI:
+- OpenAI API
+- embeddings for smart search
+- AI note summarization
+- content script generation
+- project task decomposition
+
+Deployment:
+- Vercel
+- Supabase
+- Upstash Redis
+
+====================================================
+🎨 UI / UX DESIGN
+====================================================
+Theme:
+- dark modern CEO dashboard
+- glassmorphism cards
+- premium spacing
+- smooth animations
+- sidebar workspace navigation
+- widgets
+- draggable panels
+- command palette
+- mobile responsive
+- desktop-first productivity design
+
+Pages:
+- Dashboard
+- Planner
+- Tasks
+- Projects
+- Engineering Lab
+- Content Studio
+- Knowledge Vault
+- Finance
+- Goals
+- Reviews
+- Settings
+
+====================================================
+⭐ EXTRA PREMIUM FEATURES
+====================================================
+- offline support
+- PWA install
+- desktop notifications
+- pomodoro timer
+- focus mode
+- AI assistant chat inside app
+- voice notes
+- speech to text
+- PDF export
+- weekly report PDF
+- monthly reflection PDF
+- recurring templates
+- smart recurring content workflows
+- smart habit reminders
+- email summaries
+- Telegram bot reminders
+- GitHub sync
+- Google Calendar sync
+- Notion import
+- CSV export/import
+- encrypted notes
+- analytics dashboard
+
+Generate:
+1) full project architecture
+2) folder structure
+3) Prisma schema
+4) database tables
+5) API routes
+6) reusable components
+7) page layouts
+8) UI wireframe structure
+9) implementation roadmap
+10) MVP first, then premium scalable version

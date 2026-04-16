@@ -3,20 +3,38 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Nouh LifeOS API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: dashboard
+    description: Dashboard summary endpoints
+  - name: notes
+    description: Knowledge vault notes
+  - name: tasks
+    description: Task management
+  - name: projects
+    description: Project management
+  - name: habits
+    description: Habit tracking
+  - name: finance
+    description: Financial tracking
+  - name: content
+    description: Content planning studio
+  - name: goals
+    description: Goals and objectives
+  - name: daily-plans
+    description: Daily planning
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +42,875 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── DASHBOARD ──────────────────────────────────────────────────
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get overall dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: Activity list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  # ── NOTES ──────────────────────────────────────────────────────
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List all notes
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: tag
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: pinned
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Notes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+    post:
+      operationId: createNote
+      tags: [notes]
+      summary: Create a note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNoteBody"
+      responses:
+        "201":
+          description: Created note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /notes/{id}:
+    get:
+      operationId: getNote
+      tags: [notes]
+      summary: Get a note by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+    put:
+      operationId: updateNote
+      tags: [notes]
+      summary: Update a note
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNoteBody"
+      responses:
+        "200":
+          description: Updated note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+    delete:
+      operationId: deleteNote
+      tags: [notes]
+      summary: Delete a note
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /notes/stats:
+    get:
+      operationId: getNotesStats
+      tags: [notes]
+      summary: Get notes statistics grouped by category
+      responses:
+        "200":
+          description: Notes stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotesStats"
+
+  # ── TASKS ──────────────────────────────────────────────────────
+  /tasks:
+    get:
+      operationId: listTasks
+      tags: [tasks]
+      summary: List all tasks
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [todo, in_progress, done, cancelled]
+        - in: query
+          name: priority
+          schema:
+            type: string
+            enum: [low, medium, high, urgent]
+        - in: query
+          name: projectId
+          schema:
+            type: integer
+        - in: query
+          name: dueDate
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tasks list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskBody"
+      responses:
+        "201":
+          description: Created task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}:
+    get:
+      operationId: getTask
+      tags: [tasks]
+      summary: Get a task by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    put:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update a task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskBody"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete a task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /tasks/summary:
+    get:
+      operationId: getTasksSummary
+      tags: [tasks]
+      summary: Tasks summary by status and priority
+      responses:
+        "200":
+          description: Tasks summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TasksSummary"
+
+  # ── PROJECTS ──────────────────────────────────────────────────────
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [projects]
+      summary: List all projects
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, completed, on_hold, cancelled]
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [engineering, content, business, personal]
+      responses:
+        "200":
+          description: Projects list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      operationId: createProject
+      tags: [projects]
+      summary: Create a project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectBody"
+      responses:
+        "201":
+          description: Created project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /projects/{id}:
+    get:
+      operationId: getProject
+      tags: [projects]
+      summary: Get a project by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+    put:
+      operationId: updateProject
+      tags: [projects]
+      summary: Update a project
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProjectBody"
+      responses:
+        "200":
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+    delete:
+      operationId: deleteProject
+      tags: [projects]
+      summary: Delete a project
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── HABITS ──────────────────────────────────────────────────────
+  /habits:
+    get:
+      operationId: listHabits
+      tags: [habits]
+      summary: List all habits
+      responses:
+        "200":
+          description: Habits list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Habit"
+    post:
+      operationId: createHabit
+      tags: [habits]
+      summary: Create a habit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateHabitBody"
+      responses:
+        "201":
+          description: Created habit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Habit"
+
+  /habits/{id}:
+    put:
+      operationId: updateHabit
+      tags: [habits]
+      summary: Update a habit
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateHabitBody"
+      responses:
+        "200":
+          description: Updated habit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Habit"
+    delete:
+      operationId: deleteHabit
+      tags: [habits]
+      summary: Delete a habit
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /habits/{id}/log:
+    post:
+      operationId: logHabit
+      tags: [habits]
+      summary: Log a habit completion for today
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogHabitBody"
+      responses:
+        "201":
+          description: Habit log entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HabitLog"
+
+  /habits/streaks:
+    get:
+      operationId: getHabitStreaks
+      tags: [habits]
+      summary: Get current streaks and discipline scores
+      responses:
+        "200":
+          description: Habit streaks summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HabitStreaksSummary"
+
+  # ── FINANCE ──────────────────────────────────────────────────────
+  /finance/transactions:
+    get:
+      operationId: listTransactions
+      tags: [finance]
+      summary: List financial transactions
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [income, expense]
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: month
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Transactions list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+    post:
+      operationId: createTransaction
+      tags: [finance]
+      summary: Create a transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransactionBody"
+      responses:
+        "201":
+          description: Created transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /finance/transactions/{id}:
+    put:
+      operationId: updateTransaction
+      tags: [finance]
+      summary: Update a transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTransactionBody"
+      responses:
+        "200":
+          description: Updated transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+    delete:
+      operationId: deleteTransaction
+      tags: [finance]
+      summary: Delete a transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /finance/summary:
+    get:
+      operationId: getFinanceSummary
+      tags: [finance]
+      summary: Get financial summary and net worth
+      responses:
+        "200":
+          description: Finance summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinanceSummary"
+
+  /finance/budgets:
+    get:
+      operationId: listBudgets
+      tags: [finance]
+      summary: List budget categories
+      responses:
+        "200":
+          description: Budgets list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Budget"
+    post:
+      operationId: createBudget
+      tags: [finance]
+      summary: Create a budget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBudgetBody"
+      responses:
+        "201":
+          description: Created budget
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+
+  # ── CONTENT ──────────────────────────────────────────────────────
+  /content:
+    get:
+      operationId: listContent
+      tags: [content]
+      summary: List content items
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [raw_idea, researching, scripting, filming, editing, ready, published, repurpose, archive]
+        - in: query
+          name: platform
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Content list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContentItem"
+    post:
+      operationId: createContent
+      tags: [content]
+      summary: Create a content item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContentBody"
+      responses:
+        "201":
+          description: Created content item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentItem"
+
+  /content/{id}:
+    get:
+      operationId: getContent
+      tags: [content]
+      summary: Get a content item by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Content item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentItem"
+    put:
+      operationId: updateContent
+      tags: [content]
+      summary: Update a content item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateContentBody"
+      responses:
+        "200":
+          description: Updated content item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentItem"
+    delete:
+      operationId: deleteContent
+      tags: [content]
+      summary: Delete a content item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /content/pipeline:
+    get:
+      operationId: getContentPipeline
+      tags: [content]
+      summary: Get content pipeline summary by status
+      responses:
+        "200":
+          description: Content pipeline
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentPipeline"
+
+  # ── GOALS ──────────────────────────────────────────────────────
+  /goals:
+    get:
+      operationId: listGoals
+      tags: [goals]
+      summary: List all goals
+      parameters:
+        - in: query
+          name: timeframe
+          schema:
+            type: string
+            enum: [weekly, monthly, quarterly, yearly, vision]
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, completed, abandoned]
+      responses:
+        "200":
+          description: Goals list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Goal"
+    post:
+      operationId: createGoal
+      tags: [goals]
+      summary: Create a goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGoalBody"
+      responses:
+        "201":
+          description: Created goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+
+  /goals/{id}:
+    put:
+      operationId: updateGoal
+      tags: [goals]
+      summary: Update a goal
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGoalBody"
+      responses:
+        "200":
+          description: Updated goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+    delete:
+      operationId: deleteGoal
+      tags: [goals]
+      summary: Delete a goal
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /goals/overview:
+    get:
+      operationId: getGoalsOverview
+      tags: [goals]
+      summary: Goals overview with progress by timeframe
+      responses:
+        "200":
+          description: Goals overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoalsOverview"
+
+  # ── DAILY PLANS ──────────────────────────────────────────────────────
+  /daily-plans:
+    get:
+      operationId: listDailyPlans
+      tags: [daily-plans]
+      summary: List daily plans
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Daily plans list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DailyPlan"
+    post:
+      operationId: createDailyPlan
+      tags: [daily-plans]
+      summary: Create or update today's daily plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDailyPlanBody"
+      responses:
+        "201":
+          description: Created daily plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyPlan"
+
+  /daily-plans/{date}:
+    get:
+      operationId: getDailyPlan
+      tags: [daily-plans]
+      summary: Get daily plan by date
+      parameters:
+        - in: path
+          name: date
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Daily plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyPlan"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +918,864 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    # ── DASHBOARD ──────────────────────────────────────────────────
+    DashboardSummary:
+      type: object
+      properties:
+        tasksTotal:
+          type: integer
+        tasksDueToday:
+          type: integer
+        tasksCompleted:
+          type: integer
+        habitsStreak:
+          type: integer
+        disciplineScore:
+          type: number
+        notesTotal:
+          type: integer
+        projectsActive:
+          type: integer
+        netWorth:
+          type: number
+        monthlyIncome:
+          type: number
+        monthlyExpenses:
+          type: number
+        contentPublishedThisMonth:
+          type: integer
+        goalsActive:
+          type: integer
+        goalsCompleted:
+          type: integer
+      required:
+        - tasksTotal
+        - tasksDueToday
+        - tasksCompleted
+        - habitsStreak
+        - disciplineScore
+        - notesTotal
+        - projectsActive
+        - netWorth
+        - monthlyIncome
+        - monthlyExpenses
+        - contentPublishedThisMonth
+        - goalsActive
+        - goalsCompleted
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [task_completed, note_created, habit_logged, content_published, goal_achieved, project_updated]
+        title:
+          type: string
+        description:
+          type: string
+        timestamp:
+          type: string
+        module:
+          type: string
+      required: [id, type, title, timestamp, module]
+
+    # ── NOTES ──────────────────────────────────────────────────────
+    Note:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+          enum: [engineering, content, project, business, personal]
+        subcategory:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        pinned:
+          type: boolean
+        favorite:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, title, content, category, tags, pinned, favorite, createdAt, updatedAt]
+
+    CreateNoteBody:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+          enum: [engineering, content, project, business, personal]
+        subcategory:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        pinned:
+          type: boolean
+        favorite:
+          type: boolean
+      required: [title, content, category]
+
+    UpdateNoteBody:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+          enum: [engineering, content, project, business, personal]
+        subcategory:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        pinned:
+          type: boolean
+        favorite:
+          type: boolean
+
+    NotesStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        byCategory:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: string
+              count:
+                type: integer
+            required: [category, count]
+        recentlyUpdated:
+          type: integer
+        pinned:
+          type: integer
+      required: [total, byCategory, recentlyUpdated, pinned]
+
+    # ── TASKS ──────────────────────────────────────────────────────
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [todo, in_progress, done, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        projectId:
+          type: integer
+        dueDate:
+          type: string
+        completedAt:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, title, status, priority, tags, createdAt, updatedAt]
+
+    CreateTaskBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [todo, in_progress, done, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        projectId:
+          type: integer
+        dueDate:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      required: [title]
+
+    UpdateTaskBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [todo, in_progress, done, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        projectId:
+          type: integer
+        dueDate:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    TasksSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+        byStatus:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+            required: [status, count]
+        byPriority:
+          type: array
+          items:
+            type: object
+            properties:
+              priority:
+                type: string
+              count:
+                type: integer
+            required: [priority, count]
+        overdueCount:
+          type: integer
+        dueTodayCount:
+          type: integer
+        completionRate:
+          type: number
+      required: [total, byStatus, byPriority, overdueCount, dueTodayCount, completionRate]
+
+    # ── PROJECTS ──────────────────────────────────────────────────────
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [engineering, content, business, personal]
+        status:
+          type: string
+          enum: [active, completed, on_hold, cancelled]
+        progress:
+          type: number
+        stack:
+          type: string
+        githubUrl:
+          type: string
+        deadline:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, title, type, status, progress, tags, createdAt, updatedAt]
+
+    CreateProjectBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [engineering, content, business, personal]
+        status:
+          type: string
+          enum: [active, completed, on_hold, cancelled]
+        stack:
+          type: string
+        githubUrl:
+          type: string
+        deadline:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      required: [title, type]
+
+    UpdateProjectBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [engineering, content, business, personal]
+        status:
+          type: string
+          enum: [active, completed, on_hold, cancelled]
+        progress:
+          type: number
+        stack:
+          type: string
+        githubUrl:
+          type: string
+        deadline:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    # ── HABITS ──────────────────────────────────────────────────────
+    Habit:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        frequency:
+          type: string
+          enum: [daily, weekly]
+        targetCount:
+          type: integer
+        currentStreak:
+          type: integer
+        longestStreak:
+          type: integer
+        completedToday:
+          type: boolean
+        category:
+          type: string
+          enum: [health, learning, productivity, finance, content, engineering, personal]
+        color:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, frequency, targetCount, currentStreak, longestStreak, completedToday, category, createdAt]
+
+    CreateHabitBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        frequency:
+          type: string
+          enum: [daily, weekly]
+        targetCount:
+          type: integer
+        category:
+          type: string
+          enum: [health, learning, productivity, finance, content, engineering, personal]
+        color:
+          type: string
+      required: [name, frequency]
+
+    UpdateHabitBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        frequency:
+          type: string
+          enum: [daily, weekly]
+        targetCount:
+          type: integer
+        category:
+          type: string
+          enum: [health, learning, productivity, finance, content, engineering, personal]
+        color:
+          type: string
+
+    LogHabitBody:
+      type: object
+      properties:
+        date:
+          type: string
+        note:
+          type: string
+      required: [date]
+
+    HabitLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        habitId:
+          type: integer
+        date:
+          type: string
+        note:
+          type: string
+        createdAt:
+          type: string
+      required: [id, habitId, date, createdAt]
+
+    HabitStreaksSummary:
+      type: object
+      properties:
+        disciplineScore:
+          type: number
+        consistencyScore:
+          type: number
+        totalHabits:
+          type: integer
+        completedTodayCount:
+          type: integer
+        longestStreak:
+          type: integer
+        habits:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              currentStreak:
+                type: integer
+              completedToday:
+                type: boolean
+            required: [id, name, currentStreak, completedToday]
+      required: [disciplineScore, consistencyScore, totalHabits, completedTodayCount, longestStreak, habits]
+
+    # ── FINANCE ──────────────────────────────────────────────────────
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [income, expense]
+        category:
+          type: string
+        date:
+          type: string
+        note:
+          type: string
+        createdAt:
+          type: string
+      required: [id, title, amount, type, category, date, createdAt]
+
+    CreateTransactionBody:
+      type: object
+      properties:
+        title:
+          type: string
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [income, expense]
+        category:
+          type: string
+        date:
+          type: string
+        note:
+          type: string
+      required: [title, amount, type, category, date]
+
+    UpdateTransactionBody:
+      type: object
+      properties:
+        title:
+          type: string
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [income, expense]
+        category:
+          type: string
+        date:
+          type: string
+        note:
+          type: string
+
+    FinanceSummary:
+      type: object
+      properties:
+        netWorth:
+          type: number
+        totalIncome:
+          type: number
+        totalExpenses:
+          type: number
+        savingsRate:
+          type: number
+        monthlyData:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              income:
+                type: number
+              expenses:
+                type: number
+              savings:
+                type: number
+            required: [month, income, expenses, savings]
+        expensesByCategory:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: string
+              amount:
+                type: number
+              percentage:
+                type: number
+            required: [category, amount, percentage]
+      required: [netWorth, totalIncome, totalExpenses, savingsRate, monthlyData, expensesByCategory]
+
+    Budget:
+      type: object
+      properties:
+        id:
+          type: integer
+        category:
+          type: string
+        limit:
+          type: number
+        spent:
+          type: number
+        remaining:
+          type: number
+        period:
+          type: string
+          enum: [monthly, yearly]
+      required: [id, category, limit, spent, remaining, period]
+
+    CreateBudgetBody:
+      type: object
+      properties:
+        category:
+          type: string
+        limit:
+          type: number
+        period:
+          type: string
+          enum: [monthly, yearly]
+      required: [category, limit, period]
+
+    # ── CONTENT ──────────────────────────────────────────────────────
+    ContentItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        hook:
+          type: string
+        script:
+          type: string
+        status:
+          type: string
+          enum: [raw_idea, researching, scripting, filming, editing, ready, published, repurpose, archive]
+        platform:
+          type: string
+          enum: [youtube, instagram, tiktok, twitter, linkedin, blog]
+        targetAudience:
+          type: string
+        painPoint:
+          type: string
+        cta:
+          type: string
+        dueDate:
+          type: string
+        publishDate:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, title, status, platform, tags, createdAt, updatedAt]
+
+    CreateContentBody:
+      type: object
+      properties:
+        title:
+          type: string
+        hook:
+          type: string
+        script:
+          type: string
+        status:
+          type: string
+          enum: [raw_idea, researching, scripting, filming, editing, ready, published, repurpose, archive]
+        platform:
+          type: string
+          enum: [youtube, instagram, tiktok, twitter, linkedin, blog]
+        targetAudience:
+          type: string
+        painPoint:
+          type: string
+        cta:
+          type: string
+        dueDate:
+          type: string
+        publishDate:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      required: [title, platform]
+
+    UpdateContentBody:
+      type: object
+      properties:
+        title:
+          type: string
+        hook:
+          type: string
+        script:
+          type: string
+        status:
+          type: string
+          enum: [raw_idea, researching, scripting, filming, editing, ready, published, repurpose, archive]
+        platform:
+          type: string
+          enum: [youtube, instagram, tiktok, twitter, linkedin, blog]
+        targetAudience:
+          type: string
+        painPoint:
+          type: string
+        cta:
+          type: string
+        dueDate:
+          type: string
+        publishDate:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    ContentPipeline:
+      type: object
+      properties:
+        stages:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+              label:
+                type: string
+            required: [status, count, label]
+        totalActive:
+          type: integer
+        publishedThisMonth:
+          type: integer
+      required: [stages, totalActive, publishedThisMonth]
+
+    # ── GOALS ──────────────────────────────────────────────────────
+    Goal:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        timeframe:
+          type: string
+          enum: [weekly, monthly, quarterly, yearly, vision]
+        status:
+          type: string
+          enum: [active, completed, abandoned]
+        progress:
+          type: number
+        targetDate:
+          type: string
+        milestones:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              title:
+                type: string
+              completed:
+                type: boolean
+            required: [id, title, completed]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, title, timeframe, status, progress, milestones, createdAt, updatedAt]
+
+    CreateGoalBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        timeframe:
+          type: string
+          enum: [weekly, monthly, quarterly, yearly, vision]
+        targetDate:
+          type: string
+      required: [title, timeframe]
+
+    UpdateGoalBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        timeframe:
+          type: string
+          enum: [weekly, monthly, quarterly, yearly, vision]
+        status:
+          type: string
+          enum: [active, completed, abandoned]
+        progress:
+          type: number
+        targetDate:
+          type: string
+
+    GoalsOverview:
+      type: object
+      properties:
+        totalActive:
+          type: integer
+        totalCompleted:
+          type: integer
+        averageProgress:
+          type: number
+        byTimeframe:
+          type: array
+          items:
+            type: object
+            properties:
+              timeframe:
+                type: string
+              active:
+                type: integer
+              completed:
+                type: integer
+            required: [timeframe, active, completed]
+      required: [totalActive, totalCompleted, averageProgress, byTimeframe]
+
+    # ── DAILY PLANS ──────────────────────────────────────────────────────
+    DailyPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+        mits:
+          type: array
+          items:
+            type: string
+        intention:
+          type: string
+        energyLevel:
+          type: integer
+        reflection:
+          type: string
+        wins:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, date, mits, wins, createdAt, updatedAt]
+
+    CreateDailyPlanBody:
+      type: object
+      properties:
+        date:
+          type: string
+        mits:
+          type: array
+          items:
+            type: string
+        intention:
+          type: string
+        energyLevel:
+          type: integer
+        reflection:
+          type: string
+        wins:
+          type: array
+          items:
+            type: string
+      required: [date]
