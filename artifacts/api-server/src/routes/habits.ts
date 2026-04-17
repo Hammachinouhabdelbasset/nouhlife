@@ -5,6 +5,8 @@ import {
   CreateHabitBody, UpdateHabitBody, UpdateHabitParams, DeleteHabitParams, LogHabitParams, LogHabitBody,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../middlewares/requireAuth";
+import { awardXP } from "../lib/gamification";
+import { XP_REWARDS } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -74,7 +76,13 @@ router.post("/habits/:id/log", requireAuth, async (req, res): Promise<void> => {
     await db.update(habitsTable).set({ currentStreak: newStreak, longestStreak: Math.max(newStreak, habit.longestStreak) }).where(eq(habitsTable.id, params.data.id));
   }
 
-  res.status(201).json({ id: log.id, habitId: log.habitId, date: log.date, note: log.note, createdAt: log.createdAt.toISOString() });
+  const gamResult = await awardXP(userId, XP_REWARDS.habit);
+
+  res.status(201).json({
+    id: log.id, habitId: log.habitId, date: log.date, note: log.note,
+    createdAt: log.createdAt.toISOString(),
+    xpAwarded: XP_REWARDS.habit, leveledUp: gamResult.leveledUp, newLevel: gamResult.newLevel,
+  });
 });
 
 router.get("/habits/streaks", requireAuth, async (req, res): Promise<void> => {

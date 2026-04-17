@@ -10,6 +10,7 @@ import {
   ListTasksQueryParams,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../middlewares/requireAuth";
+import { awardXP, incrementTotalTasksDone, xpForTask } from "../lib/gamification";
 
 const router: IRouter = Router();
 
@@ -77,10 +78,23 @@ router.put("/tasks/:id", requireAuth, async (req, res): Promise<void> => {
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = UpdateTaskBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  const [existing] = await db.select().from(tasksTable).where(and(eq(tasksTable.id, params.data.id), eq(tasksTable.userId, userId)));
+  if (!existing) { res.status(404).json({ error: "Task not found" }); return; }
+
   const updateData: Record<string, unknown> = { ...parsed.data, updatedAt: new Date() };
   if (parsed.data.status === "done" && !updateData.completedAt) updateData.completedAt = new Date();
   const [task] = await db.update(tasksTable).set(updateData).where(and(eq(tasksTable.id, params.data.id), eq(tasksTable.userId, userId))).returning();
   if (!task) { res.status(404).json({ error: "Task not found" }); return; }
+
+  if (parsed.data.status === "done" && existing.status !== "done") {
+    const xp = xpForTask(existing.priority);
+    const gamResult = await awardXP(userId, xp);
+    await incrementTotalTasksDone(userId);
+    res.json({ ...formatTask(task), xpAwarded: xp, leveledUp: gamResult.leveledUp, newLevel: gamResult.newLevel });
+    return;
+  }
+
   res.json(formatTask(task));
 });
 

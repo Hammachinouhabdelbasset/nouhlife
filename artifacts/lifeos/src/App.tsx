@@ -15,6 +15,9 @@ import Knowledge from "@/pages/knowledge";
 import ContentStudio from "@/pages/content";
 import Finance from "@/pages/finance";
 import Goals from "@/pages/goals";
+import Analytics from "@/pages/analytics";
+import Calendar from "@/pages/calendar";
+import SettingsPage from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -139,6 +142,15 @@ function ClerkProviderWithRoutes() {
             </Route>
             <Route path="/goals">
               <ProtectedApp><Goals /></ProtectedApp>
+            </Route>
+            <Route path="/analytics">
+              <ProtectedApp><Analytics /></ProtectedApp>
+            </Route>
+            <Route path="/calendar">
+              <ProtectedApp><Calendar /></ProtectedApp>
+            </Route>
+            <Route path="/settings">
+              <ProtectedApp><SettingsPage /></ProtectedApp>
             </Route>
             <Route component={NotFound} />
           </Switch>

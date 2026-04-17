@@ -1,0 +1,795 @@
+==========================================================
+PROJECT: LifeOS — All-in-One Productivity OS
+TARGET: Production SaaS, Replit deployment
+COMPETITOR BENCHMARK: Notion + Todoist + Duolingo
+==========================================================
+
+YOU ARE BUILDING A COMPLETE, RUNNABLE WEB APP.
+Do not explain. Do not scaffold only. Generate complete,
+working code for each phase. Every file must be functional.
+
+==========================================================
+PHASE 0 — REPLIT ENVIRONMENT SETUP
+==========================================================
+
+Create .replit file:
+  run = "npm run dev"
+  language = "nodejs"
+
+Create replit.nix with:
+  - nodejs_20
+  - postgresql (or use Supabase remote)
+
+Create .env.example with ALL required keys:
+  DATABASE_URL=
+  NEXTAUTH_SECRET=
+  NEXTAUTH_URL=http://localhost:3000
+  STRIPE_SECRET_KEY=
+  STRIPE_PUBLISHABLE_KEY=
+  STRIPE_WEBHOOK_SECRET=
+  SUPABASE_URL=
+  SUPABASE_ANON_KEY=
+  SUPABASE_SERVICE_KEY=
+  ADMIN_EMAIL=
+  NEXT_PUBLIC_APP_URL=
+
+Create package.json with exact deps:
+  next@14, react@18, typescript, tailwindcss,
+  @prisma/client, prisma, @trpc/server, @trpc/client,
+  @trpc/react-query, @tanstack/react-query,
+  next-auth, framer-motion, stripe, @supabase/supabase-js,
+  zod, bcryptjs, date-fns, recharts, @radix-ui/react-*,
+  lucide-react, clsx, tailwind-merge, nodemailer
+
+==========================================================
+PHASE 1 — FOLDER STRUCTURE (generate all files)
+==========================================================
+
+/
+├── prisma/
+│   └── schema.prisma         ← Full schema (see Phase 2)
+├── src/
+│   ├── app/                  ← Next.js 14 App Router
+│   │   ├── layout.tsx        ← Root layout + providers
+│   │   ├── page.tsx          ← Landing/marketing page
+│   │   ├── (auth)/
+│   │   │   ├── login/page.tsx
+│   │   │   └── register/page.tsx
+│   │   ├── (app)/            ← Protected app routes
+│   │   │   ├── layout.tsx    ← Sidebar + nav wrapper
+│   │   │   ├── dashboard/page.tsx
+│   │   │   ├── planner/
+│   │   │   │   ├── daily/page.tsx
+│   │   │   │   ├── weekly/page.tsx
+│   │   │   │   └── monthly/page.tsx
+│   │   │   ├── calendar/page.tsx
+│   │   │   ├── habits/page.tsx
+│   │   │   ├── finance/page.tsx
+│   │   │   ├── content/page.tsx
+│   │   │   ├── engineering/page.tsx
+│   │   │   ├── analytics/page.tsx
+│   │   │   └── settings/page.tsx
+│   │   ├── (admin)/          ← Admin-only routes
+│   │   │   ├── layout.tsx
+│   │   │   ├── users/page.tsx
+│   │   │   ├── payments/page.tsx
+│   │   │   └── analytics/page.tsx
+│   │   └── api/
+│   │       ├── trpc/[trpc]/route.ts
+│   │       ├── auth/[...nextauth]/route.ts
+│   │       └── webhooks/stripe/route.ts
+│   ├── server/
+│   │   ├── db.ts             ← Prisma client singleton
+│   │   ├── auth.ts           ← NextAuth config
+│   │   ├── trpc.ts           ← tRPC init + context
+│   │   └── routers/
+│   │       ├── _app.ts       ← Root router
+│   │       ├── tasks.ts
+│   │       ├── habits.ts
+│   │       ├── calendar.ts
+│   │       ├── finance.ts
+│   │       ├── gamification.ts
+│   │       ├── subscriptions.ts
+│   │       ├── notifications.ts
+│   │       ├── content.ts
+│   │       ├── engineering.ts
+│   │       └── admin.ts
+│   ├── components/
+│   │   ├── ui/               ← shadcn/ui base components
+│   │   ├── layout/
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── TopBar.tsx
+│   │   │   └── MobileNav.tsx
+│   │   ├── calendar/
+│   │   │   ├── CalendarView.tsx    ← Drag & drop
+│   │   │   ├── WeekView.tsx
+│   │   │   └── MonthView.tsx
+│   │   ├── gamification/
+│   │   │   ├── XPBar.tsx
+│   │   │   ├── LevelBadge.tsx
+│   │   │   ├── StreakCounter.tsx
+│   │   │   └── LevelUpModal.tsx
+│   │   ├── planner/
+│   │   │   ├── DailyPlanner.tsx
+│   │   │   ├── TaskCard.tsx
+│   │   │   └── TimeBlock.tsx
+│   │   ├── finance/
+│   │   │   ├── TransactionForm.tsx
+│   │   │   └── FinanceChart.tsx
+│   │   ├── analytics/
+│   │   │   └── Charts.tsx
+│   │   └── pricing/
+│   │       └── PricingCard.tsx
+│   ├── hooks/
+│   │   ├── useGamification.ts
+│   │   ├── useStreak.ts
+│   │   └── useTheme.ts
+│   ├── lib/
+│   │   ├── utils.ts
+│   │   ├── stripe.ts
+│   │   ├── supabase.ts
+│   │   ├── email.ts
+│   │   └── gamification.ts   ← XP/level formulas
+│   ├── styles/
+│   │   └── globals.css
+│   └── types/
+│       └── index.ts
+├── public/
+│   └── sounds/               ← XP gain, level-up sounds
+├── tailwind.config.ts
+├── next.config.ts
+└── tsconfig.json
+
+==========================================================
+PHASE 2 — DATABASE SCHEMA (prisma/schema.prisma)
+==========================================================
+
+Generate the COMPLETE Prisma schema with ALL models:
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String?
+  passwordHash      String
+  role              Role      @default(USER)
+  plan              Plan      @default(FREE)
+  planExpiresAt     DateTime?
+  stripeCustomerId  String?
+  isBeta            Boolean   @default(false)  // super_admin_beta
+  avatarUrl         String?
+  theme             String    @default("dark-ceo")
+  accentColor       String    @default("#6366f1")
+  timezone          String    @default("Africa/Algiers")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  tasks             Task[]
+  habits            Habit[]
+  habitLogs         HabitLog[]
+  calendarEvents    CalendarEvent[]
+  timeBlocks        TimeBlock[]
+  transactions      Transaction[]
+  contentItems      ContentItem[]
+  engineeringNotes  EngineeringNote[]
+  notifications     Notification[]
+  subscriptions     Subscription[]
+  manualPayments    ManualPayment[]
+  gamification      Gamification?
+  streaks           Streak[]
+  badges            UserBadge[]
+  weeklyReviews     WeeklyReview[]
+  @@index([email])
+}
+
+enum Role { USER ADMIN SUPER_ADMIN }
+enum Plan { FREE PRO ELITE BETA }
+
+model Gamification {
+  id              String @id @default(cuid())
+  userId          String @unique
+  user            User   @relation(fields:[userId], references:[id])
+  xp              Int    @default(0)
+  level           Int    @default(1)
+  disciplineScore Int    @default(0)
+  totalTasksDone  Int    @default(0)
+  longestStreak   Int    @default(0)
+  lastLoginDate   DateTime?
+  loginStreak     Int    @default(0)
+}
+
+model Streak {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields:[userId], references:[id])
+  type      String   // "daily_login" | "habit:{id}" | "tasks"
+  current   Int      @default(0)
+  best      Int      @default(0)
+  lastDate  DateTime?
+  @@index([userId, type])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  icon        String
+  condition   String      // JSON condition logic
+  userBadges  UserBadge[]
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  badgeId  String
+  user     User     @relation(fields:[userId], references:[id])
+  badge    Badge    @relation(fields:[badgeId], references:[id])
+  earnedAt DateTime @default(now())
+  @@unique([userId, badgeId])
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields:[userId], references:[id])
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  dueDate     DateTime?
+  completedAt DateTime?
+  xpReward    Int        @default(10)
+  recurring   String?    // "daily"|"weekly"|"monthly"|null
+  tags        String[]
+  color       String?
+  createdAt   DateTime   @default(now())
+  @@index([userId, status])
+}
+
+enum TaskStatus { TODO IN_PROGRESS DONE CANCELLED }
+enum Priority  { LOW MEDIUM HIGH URGENT }
+
+model Habit {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields:[userId], references:[id])
+  name      String
+  icon      String?
+  color     String     @default("#6366f1")
+  frequency String     @default("daily") // daily|weekly|monthly
+  xpReward  Int        @default(5)
+  logs      HabitLog[]
+  createdAt DateTime   @default(now())
+}
+
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  userId    String
+  habit     Habit    @relation(fields:[habitId], references:[id])
+  user      User     @relation(fields:[userId], references:[id])
+  date      DateTime @default(now())
+  completed Boolean  @default(true)
+  @@unique([habitId, userId, date])
+}
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields:[userId], references:[id])
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime
+  color       String   @default("#6366f1")
+  type        String   @default("event") // event|task|content|reminder
+  taskId      String?
+  isRecurring Boolean  @default(false)
+  recurRule   String?
+  @@index([userId, startAt])
+}
+
+model TimeBlock {
+  id      String   @id @default(cuid())
+  userId  String
+  user    User     @relation(fields:[userId], references:[id])
+  title   String
+  startAt DateTime
+  endAt   DateTime
+  color   String   @default("#6366f1")
+  taskId  String?
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields:[userId], references:[id])
+  amount      Float
+  currency    String   @default("DZD")
+  type        String   // income | expense
+  category    String
+  description String?
+  date        DateTime @default(now())
+  @@index([userId, date])
+}
+
+model ContentItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields:[userId], references:[id])
+  type      String   // idea | script | draft | published
+  title     String
+  body      String?  @db.Text
+  platform  String?
+  tags      String[]
+  status    String   @default("idea")
+  dueDate   DateTime?
+  createdAt DateTime @default(now())
+}
+
+model EngineeringNote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields:[userId], references:[id])
+  type      String   // note | snippet | debug | project
+  title     String
+  content   String   @db.Text
+  language  String?
+  tags      String[]
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields:[userId], references:[id])
+  type      String   // streak_warning | task_reminder | weekly_review | level_up
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  @@index([userId, read])
+}
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String
+  user                 User     @relation(fields:[userId], references:[id])
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  plan                 Plan
+  status               String   // active | cancelled | past_due
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime @default(now())
+}
+
+model ManualPayment {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields:[userId], references:[id])
+  plan        Plan
+  period      String   // monthly | yearly
+  currency    String   @default("DZD")
+  amount      Float
+  proofUrl    String   // Supabase storage URL
+  status      String   @default("pending") // pending | approved | rejected
+  adminNote   String?
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  createdAt   DateTime @default(now())
+}
+
+model WeeklyReview {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields:[userId], references:[id])
+  weekStart   DateTime
+  tasksTotal  Int
+  tasksDone   Int
+  xpEarned    Int
+  mood        Int      // 1-5
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model AdminPaymentMethod {
+  id           String  @id @default(cuid())
+  label        String  // e.g. "CCP", "Baridimob"
+  instructions String  @db.Text // DO NOT hardcode bank info here
+  active       Boolean @default(true)
+}
+
+==========================================================
+PHASE 3 — AUTH SYSTEM
+==========================================================
+
+Generate src/server/auth.ts:
+- Use NextAuth v5 with Credentials provider
+- Hash passwords with bcryptjs (saltRounds: 12)
+- JWT strategy, 30-day session
+- Custom session includes: id, role, plan, isBeta, xp, level
+- Callbacks: jwt() adds user fields, session() exposes them
+- Create super_admin_beta user on first run if ADMIN_EMAIL set:
+  role: SUPER_ADMIN, plan: BETA, isBeta: true
+
+Generate src/server/trpc.ts:
+- createTRPCContext reads session
+- publicProcedure — no auth
+- protectedProcedure — requires session
+- adminProcedure — requires role ADMIN or SUPER_ADMIN
+- betaProcedure — requires isBeta === true
+
+==========================================================
+PHASE 4 — GAMIFICATION ENGINE
+==========================================================
+
+Generate src/lib/gamification.ts with PURE functions:
+
+XP AWARDS:
+  completeTask: 10 + (priority bonus: LOW=0, MED=5, HIGH=15, URGENT=25)
+  completeHabit: 5 per habit
+  dailyLogin: 20 XP
+  weeklyReview: 50 XP
+  streakBonus: streak * 2 XP per day
+
+LEVEL FORMULA:
+  level = Math.floor(0.1 * Math.sqrt(totalXP))
+  xpToNextLevel = ((level + 1) / 0.1) ** 2 - totalXP
+
+DISCIPLINE SCORE (0–100):
+  = (tasksCompletionRate * 40) + (habitCompletionRate * 40) + (loginStreak * 20 / 30)
+
+Generate gamification tRPC router:
+  - awardXP(userId, amount, reason) — atomic, prevents duplicates
+  - getLeaderboard() — top 10 by XP
+  - checkAndAwardBadges(userId) — runs after every XP event
+  - getDailyMissions(userId) — 3 random missions per day
+
+BADGE CONDITIONS (store as JSON in Badge.condition):
+  "first_task"     : totalTasksDone >= 1
+  "streak_7"       : longestStreak >= 7
+  "streak_30"      : longestStreak >= 30
+  "level_10"       : level >= 10
+  "finance_track"  : transactions count >= 10
+  "content_creator": contentItems count >= 5
+
+==========================================================
+PHASE 5 — SUBSCRIPTION & PAYMENT SYSTEM
+==========================================================
+
+PRICING (implement exactly):
+
+FREE:
+  - 5 tasks/day
+  - 3 habits
+  - No finance tracker
+  - No content studio
+  - No engineering lab
+
+PRO (500 DZD/month, 4500 DZD/year — ~$3.7/$33 USD):
+  - Unlimited tasks & habits
+  - Finance tracker
+  - Content studio
+  - Analytics
+  - All themes
+
+ELITE (900 DZD/month, 8000 DZD/year — ~$6.7/$59 USD):
+  - Everything in Pro
+  - Engineering lab
+  - Priority support
+  - Beta features
+  - Advanced analytics
+
+BETA (super_admin only):
+  - All features, no limits, no expiry
+
+Generate src/server/routers/subscriptions.ts:
+  createStripeCheckout(priceId) → return Stripe checkout URL
+  createManualPayment(plan, period, proofUrl) → create ManualPayment record
+  getMySubscription() → current plan + status
+  cancelSubscription() → cancel Stripe or set manual to cancelling
+
+Generate src/app/api/webhooks/stripe/route.ts:
+  Handle: checkout.session.completed → upgrade user plan
+  Handle: customer.subscription.deleted → downgrade to FREE
+  Handle: invoice.payment_failed → send notification
+
+Generate src/app/(admin)/payments/page.tsx:
+  Table of all ManualPayment records
+  Approve button → updates ManualPayment.status + User.plan
+  Reject button → updates status + sends email notification
+  Admin can set payment method instructions (no hardcoded bank info)
+
+==========================================================
+PHASE 6 — CALENDAR SYSTEM (full drag & drop)
+==========================================================
+
+Generate src/components/calendar/CalendarView.tsx:
+  Use @dnd-kit/core for drag & drop
+  Week view: 7 columns, time slots 00:00–23:00
+  Month view: grid of days
+  Features:
+    - Drag tasks from sidebar onto calendar
+    - Resize time blocks by dragging bottom edge
+    - Color-coded by type: task=purple, habit=teal, content=amber, reminder=gray
+    - Click empty slot → create new event modal
+    - Click event → edit modal
+    - Recurring events shown with ↻ icon
+  Mobile: swipe left/right between days
+
+Generate src/server/routers/calendar.ts:
+  getEvents(startDate, endDate) → all events in range
+  createEvent(data) → validate, create CalendarEvent
+  updateEvent(id, data) → update + drag result
+  deleteEvent(id)
+  moveEvent(id, newStart, newEnd) → drag-and-drop update
+
+==========================================================
+PHASE 7 — NOTIFICATION SYSTEM
+==========================================================
+
+Generate src/server/routers/notifications.ts:
+  getMyNotifications() → paginated, unread first
+  markRead(ids[]) → bulk mark read
+  getUnreadCount() → badge number
+
+Generate src/lib/notifications.ts — server-side triggers:
+  notifyStreakWarning(userId) → "You're 2 hours away from losing your streak!"
+  notifyTaskReminder(userId, taskTitle) → "Don't forget: {taskTitle} is due today"
+  notifyWeeklyReview(userId) → every Sunday 18:00 user timezone
+  notifyLevelUp(userId, newLevel) → "You reached level {n}!"
+  notifyManualPaymentResult(userId, approved) → email + in-app
+
+Generate cron job (src/server/cron.ts):
+  Run every hour:
+    - Check users whose streak is at risk (last activity > 20h ago)
+    - Check for due tasks in next 2 hours
+    - Send weekly review prompt (Sunday 18:00)
+    - Send daily login reminder (08:00 user timezone)
+
+==========================================================
+PHASE 8 — UI SYSTEM
+==========================================================
+
+THEMES — implement as CSS variables in globals.css:
+
+dark-ceo:
+  --bg-primary: #09090b
+  --bg-surface: #18181b
+  --accent: #6366f1
+  --text: #f4f4f5
+  --border: #27272a
+
+hacker-green:
+  --bg-primary: #0a0f0a
+  --bg-surface: #111811
+  --accent: #22c55e
+  --text: #86efac
+  --border: #14532d
+
+neon-cyberpunk:
+  --bg-primary: #050010
+  --bg-surface: #0d0025
+  --accent: #e879f9
+  --text: #f0abfc
+  --border: #7e22ce
+
+minimal-light:
+  --bg-primary: #ffffff
+  --bg-surface: #f4f4f5
+  --accent: #6366f1
+  --text: #18181b
+  --border: #e4e4e7
+
+focus-mode:
+  --bg-primary: #1c1917
+  --bg-surface: #292524
+  --accent: #f59e0b
+  --text: #fafaf9
+  --border: #44403c
+
+ANIMATIONS — generate with Framer Motion:
+
+  XP popup: number floats up from task card, fades out (500ms)
+  Level up modal: scale in + particle burst, stays 3s
+  Task complete: card slides right + checkmark pulse
+  Streak badge: shake animation when streak increases
+  Dashboard widgets: staggered fade-in on load
+  Sidebar: slide in on mobile
+  Page transitions: opacity fade between routes
+
+SIDEBAR — generate Sidebar.tsx:
+  Pinned modules (drag to reorder)
+  Gamification bar at bottom: avatar + XP progress + level
+  Streak counter with fire icon
+  Notification bell with unread count
+  Theme switcher (5 themes)
+  Collapse to icon-only on mobile
+
+DASHBOARD — generate draggable widget grid:
+  Widgets: DailyProgress, StreakCard, XPBar, QuickAddTask,
+           TodayCalendar, HabitRing, FinanceSummary,
+           WeeklyReview prompt, DisciplineScore
+  User can drag to reorder, toggle visibility in settings
+  Widget state persisted to User.dashboardConfig (JSON field)
+
+==========================================================
+PHASE 9 — ANALYTICS SYSTEM
+==========================================================
+
+Generate src/components/analytics/Charts.tsx using Recharts:
+
+USER-FACING:
+  TasksCompletionAreaChart  — 30-day area chart
+  HabitConsistencyHeatmap   — GitHub-style grid
+  ProductivityScoreLine     — discipline score over time
+  XPGrowthBar              — weekly XP bars
+  FinanceFlowChart         — income vs expense monthly
+  ContentOutputChart       — pieces created per week
+
+ADMIN-FACING (admin role only):
+  UserGrowthLine           — new signups per day
+  RetentionCohortTable     — 7d/14d/30d retention
+  PlanConversionFunnel     — FREE→PRO→ELITE
+  FeatureUsageBar          — which modules used most
+  RevenueChart             — MRR over time
+
+Generate src/server/routers/admin.ts:
+  getStats() → { totalUsers, activeToday, mrr, conversionRate }
+  getUserList(filters) → paginated users table
+  updateUserPlan(userId, plan) → admin override
+  getFeatureUsage() → count by module
+
+==========================================================
+PHASE 10 — CONTENT STUDIO + ENGINEERING LAB
+==========================================================
+
+Generate src/app/(app)/content/page.tsx:
+  Kanban board: columns = Idea | In Progress | Scheduled | Published
+  Each card: title, platform badge, due date, tags
+  Quick add from top of column
+  Calendar integration: scheduled content shows on calendar
+
+Generate src/app/(app)/engineering/page.tsx:
+  Split view: file tree left, editor right (textarea with syntax hints)
+  Types: note | code snippet | debug log | project
+  Code snippets: language badge, copy button, syntax display
+  Search across all notes (client-side fuzzy search)
+  Export note as .md file
+
+==========================================================
+PHASE 11 — FINANCE TRACKER
+==========================================================
+
+Generate src/app/(app)/finance/page.tsx:
+  Summary cards: Total In, Total Out, Balance (this month)
+  Add transaction form: amount, type, category, description, date
+  Transaction list with filters: date range, type, category
+  Categories: food, transport, entertainment, salary, freelance, other
+  Charts: monthly flow, category pie chart
+  Currency: DZD default, show USD/EUR equivalent (static rates)
+  Export CSV button
+
+==========================================================
+PHASE 12 — WEEKLY REVIEW + MONTHLY REFLECTION
+==========================================================
+
+Generate weekly review modal (triggered Sunday 18:00 or manually):
+  Step 1: Rate your week (1-5 mood)
+  Step 2: Show stats: tasks done, habits hit %, XP earned
+  Step 3: Write reflection note
+  Step 4: Set 3 intentions for next week → creates tasks
+  Step 5: Award 50 XP + badge if first review
+
+==========================================================
+PHASE 13 — SECURITY IMPLEMENTATION
+==========================================================
+
+Implement everywhere:
+  - All passwords: bcrypt hash before storage, NEVER log
+  - All inputs: Zod schema validation in every tRPC procedure
+  - File uploads (payment proof): validate type (jpg/png/pdf only),
+    max 5MB, rename to UUID before Supabase upload
+  - Rate limiting: 100 req/min per IP using in-memory map
+    (or Upstash Redis if available)
+  - RBAC: every admin route checks role in tRPC middleware
+  - No sensitive data in client-side JS bundles
+  - NEXTAUTH_SECRET must be min 32 chars, validated on startup
+  - Stripe webhook: verify signature with stripe.webhooks.constructEvent
+  - ManualPayment proofUrl: only accessible by uploader + admins
+
+==========================================================
+PHASE 14 — LANDING PAGE
+==========================================================
+
+Generate src/app/page.tsx — full marketing page:
+  Hero: "Your Second Brain. Your Discipline Engine."
+  Subheadline: "Plan, build, track, grow — all in one OS."
+  CTA: "Start Free" → /register
+  Features section: 6 feature cards with icons
+  Pricing section: 3 plan cards (FREE / PRO / ELITE)
+    - DZD prices shown by default
+    - Toggle to USD/EUR
+    - "Pay with Stripe" or "Manual Payment (DZ)"
+  Social proof: "Built for builders in Algeria and beyond"
+  Footer: Privacy · Terms · Contact
+
+==========================================================
+PHASE 15 — DEPLOYMENT CHECKLIST
+==========================================================
+
+Generate DEPLOY.md with:
+
+1. Replit Setup:
+   - Fork repo to Replit
+   - Add all .env vars in Replit Secrets
+   - Enable "Always On" for background cron jobs
+
+2. Database:
+   - Use Supabase free tier as PostgreSQL host
+   - Copy DATABASE_URL from Supabase → Replit secret
+   - Run: npx prisma db push
+   - Run: npx prisma db seed (creates admin + badges)
+
+3. Stripe Setup:
+   - Create products: LifeOS Pro Monthly, Pro Yearly, Elite Monthly, Elite Yearly
+   - Copy price IDs to env
+   - Add webhook endpoint: https://yourapp.replit.app/api/webhooks/stripe
+   - Enable events: checkout.session.completed, subscription events
+
+4. Supabase Storage:
+   - Create bucket: "payment-proofs" (private)
+   - Create bucket: "avatars" (public)
+   - Add service key to env
+
+5. First Run:
+   - Visit /api/setup (one-time route, deletes itself after use)
+   - Creates SUPER_ADMIN user from ADMIN_EMAIL env
+   - Sets isBeta=true, plan=BETA, role=SUPER_ADMIN
+
+6. Verify:
+   - [ ] Register new user works
+   - [ ] Login works, session persists
+   - [ ] Add task → XP awarded → level shown
+   - [ ] Stripe checkout redirects and upgrades plan
+   - [ ] Manual payment upload works
+   - [ ] Admin can approve payment → plan upgrades
+   - [ ] Calendar drag & drop works
+   - [ ] Notifications appear
+
+==========================================================
+SUPER ADMIN BETA ACCOUNT
+==========================================================
+
+The super_admin_beta account is created automatically on first deploy.
+Credentials set via env: ADMIN_EMAIL + ADMIN_PASSWORD
+Capabilities:
+  - All features regardless of plan checks
+  - Access to /admin routes
+  - Can impersonate any user (view-only)
+  - Can manually set any user's plan
+  - Bypasses rate limiting
+  - Hidden "God Mode" toggle in settings that shows internal state
+
+==========================================================
+BUILD ORDER FOR REPLIT (one file at a time)
+==========================================================
+
+Step 1: prisma/schema.prisma + npx prisma db push
+Step 2: src/server/db.ts + src/server/auth.ts
+Step 3: src/server/trpc.ts + all routers
+Step 4: src/app/api/ routes (tRPC, auth, webhooks)
+Step 5: src/lib/ utilities
+Step 6: src/components/ui/ (shadcn setup)
+Step 7: src/components/layout/ (Sidebar, TopBar)
+Step 8: Auth pages (login, register)
+Step 9: Dashboard + all (app) pages
+Step 10: Gamification components + animations
+Step 11: Calendar with drag & drop
+Step 12: Admin panel
+Step 13: Landing page
+Step 14: Seed file + DEPLOY.md
+
+Generate each step as complete, runnable TypeScript.
+No placeholders. No "TODO" comments.
+Every component must import correctly and render without errors.
+==========================================================

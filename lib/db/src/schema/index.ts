@@ -6,3 +6,4 @@ export * from "./finance";
 export * from "./content";
 export * from "./goals";
 export * from "./daily_plans";
+export * from "./gamification";
