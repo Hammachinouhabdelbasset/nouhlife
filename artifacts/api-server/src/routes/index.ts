@@ -10,6 +10,7 @@ import goalsRouter from "./goals";
 import dailyPlansRouter from "./daily_plans";
 import dashboardRouter from "./dashboard";
 import gamificationRouter from "./gamification";
+import meRouter from "./me";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(contentRouter);
 router.use(goalsRouter);
 router.use(dailyPlansRouter);
 router.use(gamificationRouter);
+router.use(meRouter);
 
 export default router;
