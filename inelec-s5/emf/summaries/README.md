@@ -1,0 +1,3 @@
+# EMF — Electromagnetic Field Theory — summaries
+
+One-page formula sheets and chapter summaries (`chNN-<topic>-summary.pdf`).
