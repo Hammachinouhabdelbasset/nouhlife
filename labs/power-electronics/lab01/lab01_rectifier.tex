@@ -1,0 +1,543 @@
+% =====================================================================
+%  EE331 Power Electronics Lab -- Experiment 01
+%  Single-Phase Half-Wave / Full-Wave Rectifier (Experimental)
+%  Compile with pdflatex (Overleaf: just upload this file).
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,array,multirow}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption,subcaption}
+\usepackage{enumitem}
+\usepackage{circuitikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+
+% =====================================================================
+%  >>>>>>>>>>  EDIT THIS BLOCK ONLY  <<<<<<<<<<
+% =====================================================================
+\newcommand{\studentA}{Hammachi Nouh Abdelbasset}
+\newcommand{\studentB}{\dotfill}
+\newcommand{\studentC}{\dotfill}
+\newcommand{\group}{L3 -- G03}
+\newcommand{\labdate}{\dotfill}
+
+% Oscilloscope readings  (DC = "Mean" in DC coupling,
+%                         AC = "RMS" in AC coupling)  -- in volts.
+% The default numbers below are the PREDICTED values (diode drop 0.7 V).
+% Replace them with what you read in the lab, then set \measuredtrue.
+\newcommand{\HWRdc}{10.58}   \newcommand{\HWRac}{12.82}   % half-wave, R
+\newcommand{\HWCdc}{32.58}   \newcommand{\HWCac}{0.384}   % half-wave, R-C
+\newcommand{\FWRdc}{20.72}   \newcommand{\FWRac}{10.02}   % full-wave, R
+\newcommand{\FWCdc}{32.22}   \newcommand{\FWCac}{0.188}   % full-wave, R-C
+\newif\ifmeasured
+\measuredfalse   % <-- change to \measuredtrue once you put your readings
+% =====================================================================
+
+% ---------- automatic computation of Vrms, FF, RF, efficiency --------
+\makeatletter
+\newcommand{\computerow}[3]{% #1 = name, #2 = Vdc, #3 = Vac
+  \pgfmathsetmacro\@vr{sqrt((#2)*(#2)+(#3)*(#3))}%
+  \pgfmathsetmacro\@ff{\@vr/(#2)}%
+  \pgfmathsetmacro\@rf{(#3)/(#2)}%
+  \pgfmathsetmacro\@eta{100*((#2)/\@vr)*((#2)/\@vr)}%
+  \expandafter\xdef\csname #1rms\endcsname{\@vr}%
+  \expandafter\xdef\csname #1ff\endcsname{\@ff}%
+  \expandafter\xdef\csname #1rf\endcsname{\@rf}%
+  \expandafter\xdef\csname #1eta\endcsname{\@eta}}
+\makeatother
+\newcommand{\nm}[2][2]{\pgfmathprintnumber[fixed,fixed zerofill,precision=#1]{#2}}
+\newcommand{\resrow}[3]{% name, Vdc, Vac
+  \nm{#2} & \nm[3]{#3} & \nm{\csname #1rms\endcsname} &
+  \nm[3]{\csname #1ff\endcsname} & \nm[3]{\csname #1rf\endcsname} &
+  \nm[1]{\csname #1eta\endcsname}\,\%}
+\newcommand{\err}[2]{\pgfmathsetmacro\tmperr{100*abs((#1)-(#2))/(#2)}\nm[1]{\tmperr}\,\%}
+\newcommand{\predictednote}{%
+  \ifmeasured\else
+  \par\smallskip{\color{red!70!black}\footnotesize\textbf{Note:} values shown are the
+  \emph{predicted} values. Replace them with your oscilloscope readings in the
+  edit block at the top of the file.}\fi}
+
+% ---------- oscilloscope-screen style plots --------------------------
+% 10 x 8 divisions, 5 ms/div
+\pgfmathsetmacro\Vm{33.94}     % 24*sqrt(2)
+\pgfmathsetmacro\tauRC{500}    % RC in ms (500 ohm * 1000 uF)
+\newenvironment{scopeplot}[2]{% #1 = V/div, #2 = y label
+  \begin{tikzpicture}
+  \begin{axis}[width=8.2cm,height=6.4cm,
+    xmin=0,xmax=50,ymin=-4*#1,ymax=4*#1,
+    xtick={0,5,...,50},ytick={-4*#1,-3*#1,...,4*#1},
+    grid=major,grid style={gray!35},
+    tick label style={font=\scriptsize},label style={font=\small},
+    xlabel={$t$ (ms)},ylabel={#2},
+    samples=1201,domain=0:50,
+    axis line style={thick},
+    every axis plot/.append style={very thick},
+    y tick label style={/pgf/number format/fixed}]}
+  {\end{axis}\end{tikzpicture}}
+% building blocks (t in ms, angle in degrees: wt = 18 t)
+\newcommand{\vs}{\Vm*sin(18*x)}
+\newcommand{\vhw}{max(\Vm*sin(18*x),\Vm*exp(-mod(x+15,20)/\tauRC))}
+\newcommand{\vfw}{max(\Vm*abs(sin(18*x)),\Vm*exp(-mod(x+5,10)/\tauRC))}
+
+\begin{document}
+% =====================================================================
+\begin{titlepage}
+\centering
+{\large Université M'Hamed Bougara -- Boumerdès (UMBB)\par}
+{\large Institute of Electrical and Electronic Engineering (IGEE)\par}
+{Department of Power and Control\par}
+\vspace{2.2cm}
+{\Large EE331 -- Power Electronics Laboratory\par}
+\vspace{0.8cm}
+\rule{\linewidth}{1pt}\par\vspace{0.3cm}
+{\Huge\bfseries Experiment N\textsuperscript{o}\,01\par}
+\vspace{0.3cm}
+{\LARGE Single-Phase Half-Wave / Full-Wave\\[2pt] Rectification Circuit\par}
+\vspace{0.2cm}
+{\large (Experimental)\par}
+\rule{\linewidth}{1pt}\par
+\vspace{2cm}
+\begin{tabular}{>{\bfseries}l p{8cm}}
+Students: & \studentA \\
+          & \studentB \\
+          & \studentC \\[4pt]
+Group:    & \group \\[4pt]
+Date:     & \labdate \\[4pt]
+Instructor: & Mrs.\ RECIOUI F.Z.
+\end{tabular}
+\vfill
+{\large Academic year 2026/2027\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+% =====================================================================
+\section{Objectives}
+\begin{itemize}[nosep]
+\item Build single-phase half-wave and full-wave (bridge) diode rectifiers.
+\item Observe, on the oscilloscope, the input voltage, the load voltage, the load
+      (diode) current and the diode voltage with a resistive (R) and a
+      resistive--capacitive (R--C) load.
+\item Measure the DC and AC components of the load voltage and evaluate the
+      performance parameters: RMS value, form factor (F.F.), ripple factor (R.F.)
+      and rectification efficiency ($\eta$).
+\item Compare the experimental results with the theoretical predictions and
+      show the effect of the smoothing capacitor.
+\end{itemize}
+
+\section{Equipment}
+\begin{itemize}[nosep]
+\item Trainer module ED-2040-A ``Single phase half, full-wave rectifier''
+      (24\,V\textsubscript{rms}, 50\,Hz AC source, switch, fuse, diodes $D$, $D_1$--$D_4$,
+      1\,$\Omega$ current-sensing resistor).
+\item Load resistor $R_L = 500\,\Omega$, filter capacitor $C_L = 1000\,\mu$F.
+\item Digital oscilloscope with two probes, connecting leads.
+\end{itemize}
+
+% =====================================================================
+\section{Pre-lab preparation (theory)}
+\subsection{Definitions used in this report}
+For a periodic load voltage $v_L(t)$ of period $T$:
+\begin{align*}
+V_{dc} &= \frac{1}{T}\int_0^T v_L\,dt, &
+V_{rms} &= \sqrt{\frac{1}{T}\int_0^T v_L^2\,dt}=\sqrt{V_{dc}^2+V_{ac}^2},\\
+\text{F.F.} &= \frac{V_{rms}}{V_{dc}}, &
+\text{R.F.} &= \frac{V_{ac}}{V_{dc}}=\sqrt{\text{F.F.}^2-1}, \qquad
+\eta = \frac{P_{dc}}{P_{ac}}=\frac{V_{dc}^2/R}{V_{rms}^2/R}=\left(\frac{V_{dc}}{V_{rms}}\right)^2 .
+\end{align*}
+$V_{ac}$ is the RMS value of the AC (ripple) component only.
+The supply is $v_s(t)=V_m\sin\omega t$ with
+\[
+V_m=\sqrt2\times24 = 33.94\ \text{V},\qquad f=50\ \text{Hz},\ T=20\ \text{ms},\qquad
+\tau = R_LC_L = 500\times1000\cdot10^{-6}=0.5\ \text{s}.
+\]
+The 1\,$\Omega$ sensing resistor is negligible compared with $R_L$ ($1\ll500$).
+
+\subsection{Half-wave rectifier with R load}
+The diode conducts only when $v_s>0$:
+$v_L=V_m\sin\omega t$ for $0<\omega t<\pi$ and $v_L=0$ for $\pi<\omega t<2\pi$.
+\begin{align*}
+V_{dc}&=\frac{1}{2\pi}\int_0^{\pi}V_m\sin\theta\,d\theta=\frac{V_m}{\pi}=\frac{33.94}{\pi}=10.80\ \text{V}\\
+V_{rms}&=\sqrt{\frac{1}{2\pi}\int_0^{\pi}V_m^2\sin^2\theta\,d\theta}=\frac{V_m}{2}=16.97\ \text{V}\\
+V_{ac}&=\sqrt{V_{rms}^2-V_{dc}^2}=13.09\ \text{V}\\
+\text{F.F.}&=\frac{\pi}{2}=1.571,\qquad \text{R.F.}=\sqrt{1.571^2-1}=1.211,\qquad
+\eta=\frac{4}{\pi^2}=40.5\,\%.
+\end{align*}
+Peak load current: $I_m=V_m/(R_L+1)\approx 67.7$\,mA (66.3\,mA with a 0.7\,V diode drop).
+Peak inverse voltage of the diode: $\text{PIV}=V_m=33.94$\,V.
+
+With a real silicon diode ($V_F\approx0.7$\,V) the peak becomes $V_m-V_F=33.24$\,V, so
+$V_{dc}\approx 10.58$\,V, $V_{rms}\approx16.62$\,V (F.F., R.F.\ and $\eta$ do not change).
+
+\subsection{Half-wave rectifier with R--C load}
+The capacitor charges to $V_m$ at the peak and discharges through $R_L$ while the
+diode is off. Since $\tau=0.5\ \text{s}\gg T=20$\,ms the discharge is almost linear:
+\begin{align*}
+\Delta V_{pp}&\approx\frac{V_m}{fR_LC_L}=\frac{33.94}{50\times0.5}=1.36\ \text{V},\qquad
+V_{dc}\approx V_m-\frac{\Delta V_{pp}}{2}=33.26\ \text{V},\\
+V_{ac}&\approx\frac{\Delta V_{pp}}{2\sqrt3}=0.392\ \text{V}\ (\text{triangular ripple}),\qquad
+\text{R.F.}=\frac{1}{2\sqrt3\,fR_LC_L}\approx 0.0118,\\
+\text{F.F.}&=\sqrt{1+\text{R.F.}^2}\approx1.0001,\qquad \eta\approx 99.99\,\%.
+\end{align*}
+The diode conducts only from $\theta_1=\arcsin(1-\Delta V_{pp}/V_m)\approx73.7^\circ$
+to $\approx90^\circ$ (about $16^\circ$ per cycle), so the diode current is a short pulse of
+peak $i_{D,\max}\approx\omega C V_m\cos\theta_1+V_m/R_L\approx3$\,A (in practice lower,
+limited by the transformer and wiring resistances).
+The diode now has to withstand $\text{PIV}=2V_m\approx 67.9$\,V
+(capacitor at $+V_m$, anode at $-V_m$).
+
+\subsection{Full-wave (bridge) rectifier with R load}
+$D_1,D_2$ conduct in the positive half cycle and $D_3,D_4$ in the negative one, so
+$v_L=V_m|\sin\omega t|$ with period $T/2=10$\,ms (ripple frequency 100\,Hz).
+\begin{align*}
+V_{dc}&=\frac{2V_m}{\pi}=21.61\ \text{V},\qquad V_{rms}=\frac{V_m}{\sqrt2}=24.00\ \text{V},\qquad
+V_{ac}=\sqrt{24^2-21.61^2}=10.45\ \text{V},\\
+\text{F.F.}&=\frac{\pi}{2\sqrt2}=1.111,\qquad \text{R.F.}=0.483,\qquad
+\eta=\frac{8}{\pi^2}=81.1\,\%.
+\end{align*}
+Two diodes are in series in the current path, so the peak is $V_m-2V_F=32.54$\,V,
+giving $V_{dc}\approx20.72$\,V and $V_{rms}\approx23.01$\,V. PIV of each diode $=V_m$.
+
+\subsection{Full-wave (bridge) rectifier with R--C load}
+The capacitor is recharged twice per period, so the ripple is halved:
+\begin{align*}
+\Delta V_{pp}&\approx\frac{V_m}{2fR_LC_L}=0.68\ \text{V},\qquad
+V_{dc}\approx V_m-\frac{\Delta V_{pp}}{2}=33.60\ \text{V},\qquad
+V_{ac}\approx\frac{\Delta V_{pp}}{2\sqrt3}=0.196\ \text{V},\\
+\text{R.F.}&=\frac{1}{4\sqrt3\,fR_LC_L}\approx0.0058,\qquad \text{F.F.}\approx1.0000,\qquad
+\eta\approx100\,\%.
+\end{align*}
+Conduction angle $\approx 11.5^\circ$ per half cycle, current pulses $\approx2.2$\,A peak
+(theoretical), PIV of each diode $=V_m$.
+
+\subsection{Summary of the predicted values}
+\begin{table}[H]
+\centering
+\caption{Theoretical values (ideal diodes / with $V_F=0.7$\,V per diode).}
+\begin{tabular}{llcccccc}
+\toprule
+Circuit & Load & $V_{dc}$ (V) & $V_{ac}$ (V) & $V_{rms}$ (V) & F.F. & R.F. & $\eta$\\
+\midrule
+\multirow{2}{*}{Half-wave} & R   & 10.80 / 10.58 & 13.09 / 12.82 & 16.97 / 16.62 & 1.571 & 1.211 & 40.5\,\%\\
+                           & R--C& 33.26 / 32.58 & 0.392 / 0.384 & 33.26 / 32.58 & 1.000 & 0.012 & 99.99\,\%\\
+\midrule
+\multirow{2}{*}{Full-wave} & R   & 21.61 / 20.72 & 10.45 / 10.02 & 24.00 / 23.01 & 1.111 & 0.483 & 81.1\,\%\\
+                           & R--C& 33.60 / 32.22 & 0.196 / 0.188 & 33.60 / 32.22 & 1.000 & 0.006 & 100\,\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =====================================================================
+\section{Circuits and procedure}
+\subsection{Circuit diagrams}
+\begin{figure}[H]
+\centering
+\begin{circuitikz}[scale=0.9,transform shape]
+\draw (0,0) to[sV, l=$v_s$\\24\,V\,50\,Hz, align=center] (0,3)
+      to[D*, l=$D$, v^=$v_D$] (2.8,3)
+      to[R, l=$1\,\Omega$, i>^=$i_L$] (5.2,3) -- (6.5,3)
+      to[R, l_=$R_L$, v^=$v_L$] (6.5,0) -- (0,0);
+\draw[dashed] (6.5,3) -- (8.3,3) to[C, l=$C_L$] (8.3,0) -- (6.5,0);
+\draw (6.5,3) node[circ]{}; \draw (6.5,0) node[circ]{};
+\end{circuitikz}
+\caption{Half-wave rectifier. $C_L$ (dashed) is connected only for the R--C load.
+The voltage across the 1\,$\Omega$ resistor gives the current waveform.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{circuitikz}[scale=0.9,transform shape]
+\draw (0,0) to[D*, l=$D_4$] (0,2) to[D*, l=$D_1$] (0,4);
+\draw (3.6,0) to[D*, l_=$D_2$] (3.6,2) to[D*, l_=$D_3$] (3.6,4);
+\draw (0,2) node[circ]{} -- (0.6,2) to[sV, l_=$v_s$] (3.0,2) -- (3.6,2) node[circ]{};
+\draw (0,4) -- (3.6,4) to[R, l=$1\,\Omega$, i>^=$i_o$] (6.2,4) -- (7.2,4)
+      to[R, l_=$R_L$, v^=$v_L$] (7.2,0) -- (0,0);
+\draw[dashed] (7.2,4) -- (9,4) to[C, l=$C_L$] (9,0) -- (7.2,0);
+\draw (7.2,4) node[circ]{}; \draw (7.2,0) node[circ]{};
+\draw (3.6,4) node[circ]{}; \draw (3.6,0) node[circ]{};
+\end{circuitikz}
+\caption{Full-wave bridge rectifier ($D_1D_2$ conduct for $v_s>0$, $D_3D_4$ for $v_s<0$).}
+\end{figure}
+
+\subsection{Procedure followed}
+\textbf{Part one -- half-wave rectifier.}
+\begin{enumerate}[nosep]
+\item Switch on the supply and display the input voltage $v_s$ (Fig.~\ref{fig:vin}).
+\item Connect $D$, the 1\,$\Omega$ resistor and $R_L=500\,\Omega$ as in Fig.~1.
+\item Measure $V_{dc}$ (``Mean'', DC coupling) and $V_{ac}$ (``RMS'', AC coupling) of the load voltage; record in Table~I.
+\item Display the load voltage, the load current (voltage across 1\,$\Omega$: 1\,mV $\leftrightarrow$ 1\,mA) and the diode voltage.
+\item Switch off, add $C_L=1000\,\mu$F in parallel with $R_L$ (observe the polarity of the
+      electrolytic capacitor), switch on and repeat steps 3--4.
+\end{enumerate}
+\textbf{Part two -- full-wave rectifier.} Repeat the same steps with the bridge
+($D_1$--$D_4$) and record the results in Table~II.
+
+\textbf{Precautions.} Always switch off before rewiring; respect the capacitor polarity;
+in the bridge, never connect the two probe grounds to different points of the
+circuit (the common ground of the oscilloscope would short-circuit a diode) --
+display the input and the output one at a time.
+
+\textbf{Oscilloscope settings used:} 5\,ms/div for all waveforms; 10\,V/div for
+voltages, 20\,mV/div for the current with R load, 1\,V/div for the current pulses
+with R--C load, 20\,V/div for the diode voltage with R--C load, 0.5\,V/div in AC
+coupling to zoom on the ripple.
+
+% =====================================================================
+\section{Results}
+\subsection{Measured values}
+\computerow{HWR}{\HWRdc}{\HWRac}\computerow{HWC}{\HWCdc}{\HWCac}%
+\computerow{FWR}{\FWRdc}{\FWRac}\computerow{FWC}{\FWCdc}{\FWCac}%
+\begin{table}[H]
+\centering
+\caption*{\textbf{Table (I)} -- Experimental results for the half-wave rectifier}
+\begin{tabular}{llcccccc}
+\toprule
+Load & Value & $V_{dc}$ (V) & $V_{ac}$ (V) & $V_{rms}=\sqrt{V_{dc}^2+V_{ac}^2}$ (V) & F.F. & R.F. & $\eta$\\
+\midrule
+R   & 500\,$\Omega$ & \resrow{HWR}{\HWRdc}{\HWRac}\\
+R--C& 500\,$\Omega$, 1000\,$\mu$F & \resrow{HWC}{\HWCdc}{\HWCac}\\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{table}[H]
+\centering
+\caption*{\textbf{Table (II)} -- Experimental results for the full-wave rectifier}
+\begin{tabular}{llcccccc}
+\toprule
+Load & Value & $V_{dc}$ (V) & $V_{ac}$ (V) & $V_{rms}=\sqrt{V_{dc}^2+V_{ac}^2}$ (V) & F.F. & R.F. & $\eta$\\
+\midrule
+R   & 500\,$\Omega$ & \resrow{FWR}{\FWRdc}{\FWRac}\\
+R--C& 500\,$\Omega$, 1000\,$\mu$F & \resrow{FWC}{\FWCdc}{\FWCac}\\
+\bottomrule
+\end{tabular}
+\predictednote
+\end{table}
+
+\textbf{Sample calculation} (half-wave, R load):
+$V_{rms}=\sqrt{\HWRdc^2+\HWRac^2}=\nm{\HWRrms}$\,V,\quad
+F.F.$=\nm{\HWRrms}/\HWRdc=\nm[3]{\HWRff}$,\quad
+R.F.$=\HWRac/\HWRdc=\nm[3]{\HWRrf}$,\quad
+$\eta=(\HWRdc/\nm{\HWRrms})^2=\nm[1]{\HWReta}\,\%$.
+
+\subsection{Comparison with theory}
+\begin{table}[H]
+\centering
+\caption{Measured $V_{dc}$ vs.\ theoretical (ideal-diode) $V_{dc}$.}
+\begin{tabular}{lccc}
+\toprule
+Case & $V_{dc}$ theory (V) & $V_{dc}$ measured (V) & Error \\
+\midrule
+Half-wave, R   & 10.80 & \nm{\HWRdc} & \err{\HWRdc}{10.80}\\
+Half-wave, R--C& 33.26 & \nm{\HWCdc} & \err{\HWCdc}{33.26}\\
+Full-wave, R   & 21.61 & \nm{\FWRdc} & \err{\FWRdc}{21.61}\\
+Full-wave, R--C& 33.60 & \nm{\FWCdc} & \err{\FWCdc}{33.60}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =====================================================================
+\subsection{Waveforms}
+All waveforms are drawn at 5\,ms/div (2.5 periods on the screen); the vertical
+scale is given under each graph. They are drawn for ideal diodes; the measured
+waveforms are the same with peaks about 0.7\,V (half-wave) or 1.4\,V (bridge) lower.
+
+\subsubsection*{Input voltage}
+\begin{figure}[H]
+\centering
+\begin{scopeplot}{10}{$v_s$ (V)}
+\addplot[blue] {\vs};
+\end{scopeplot}
+\caption{Input voltage: $V_m=33.9$\,V, $T=20$\,ms (Time 5\,ms/div, Volt 10\,V/div).}
+\label{fig:vin}
+\end{figure}
+
+\subsubsection*{Half-wave rectifier -- R load}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{10}{$v_L$ (V)}
+\addplot[gray,dashed,thin] {\vs};
+\addplot[red] {max(\vs,0)};
+\end{scopeplot}
+\caption{Load voltage (5\,ms/div, 10\,V/div)}
+\end{subfigure}\hfill
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{20}{$v_{1\Omega}$ (mV) $\equiv i_L$ (mA)}
+\addplot[teal] {max(\vs,0)/501*1000};
+\end{scopeplot}
+\caption{Load current (5\,ms/div, 20\,mV/div)}
+\end{subfigure}
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{10}{$v_D$ (V)}
+\addplot[violet] {min(\vs,0)};
+\end{scopeplot}
+\caption{Diode voltage (5\,ms/div, 10\,V/div)}
+\end{subfigure}
+\caption{Half-wave rectifier with R load.}
+\end{figure}
+
+\subsubsection*{Half-wave rectifier -- R--C load}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{10}{$v_L$ (V)}
+\addplot[gray,dashed,thin] {\vs};
+\addplot[red] {\vhw};
+\end{scopeplot}
+\caption{Load voltage (5\,ms/div, 10\,V/div)}
+\end{subfigure}\hfill
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{0.5}{$v_L-V_{dc}$ (V)}
+\addplot[red] {\vhw-33.26};
+\end{scopeplot}
+\caption{Ripple, AC coupling (5\,ms/div, 0.5\,V/div)}
+\end{subfigure}
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{1}{$v_{1\Omega}$ (V) $\equiv i_D$ (A)}
+\addplot[teal] {(\vs >= \Vm*exp(-mod(x+15,20)/\tauRC))*max(0,\Vm*(0.31416*cos(18*x)+sin(18*x)/500))};
+\end{scopeplot}
+\caption{Diode (charging) current (5\,ms/div, 1\,V/div)}
+\end{subfigure}\hfill
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{20}{$v_D$ (V)}
+\addplot[violet] {\vs-\vhw};
+\end{scopeplot}
+\caption{Diode voltage, PIV $\approx2V_m$ (5\,ms/div, 20\,V/div)}
+\end{subfigure}
+\caption{Half-wave rectifier with R--C load ($R_L=500\,\Omega$, $C_L=1000\,\mu$F).}
+\end{figure}
+
+\subsubsection*{Full-wave rectifier -- R load}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{10}{$v_L$ (V)}
+\addplot[gray,dashed,thin] {\vs};
+\addplot[red] {abs(\vs)};
+\end{scopeplot}
+\caption{Load voltage (5\,ms/div, 10\,V/div)}
+\end{subfigure}\hfill
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{20}{$v_{1\Omega}$ (mV) $\equiv i_L$ (mA)}
+\addplot[teal] {abs(\vs)/501*1000};
+\end{scopeplot}
+\caption{Load current (5\,ms/div, 20\,mV/div)}
+\end{subfigure}
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{10}{$v_{D1}$ (V)}
+\addplot[violet] {min(\vs,0)};
+\end{scopeplot}
+\caption{Voltage across $D_1$ (5\,ms/div, 10\,V/div)}
+\end{subfigure}
+\caption{Full-wave bridge rectifier with R load.}
+\end{figure}
+
+\subsubsection*{Full-wave rectifier -- R--C load}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{10}{$v_L$ (V)}
+\addplot[gray,dashed,thin] {\vs};
+\addplot[red] {\vfw};
+\end{scopeplot}
+\caption{Load voltage (5\,ms/div, 10\,V/div)}
+\end{subfigure}\hfill
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{0.5}{$v_L-V_{dc}$ (V)}
+\addplot[red] {\vfw-33.60};
+\end{scopeplot}
+\caption{Ripple, AC coupling (5\,ms/div, 0.5\,V/div)}
+\end{subfigure}
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{1}{$v_{1\Omega}$ (V) $\equiv i_o$ (A)}
+\addplot[teal] {(abs(\vs) >= \Vm*exp(-mod(x+5,10)/\tauRC))*max(0,\Vm*(0.31416*cos(18*x)*sign(sin(18*x))+abs(sin(18*x))/500))};
+\end{scopeplot}
+\caption{Charging current pulses (5\,ms/div, 1\,V/div)}
+\end{subfigure}\hfill
+\begin{subfigure}{0.49\linewidth}\centering
+\begin{scopeplot}{10}{$v_{D1}$ (V)}
+\addplot[violet] {(\vs>=0)*(\vs-\vfw) + (\vs<0)*(-\vfw)};
+\end{scopeplot}
+\caption{Voltage across $D_1$, PIV $\approx V_m$ (5\,ms/div, 10\,V/div)}
+\end{subfigure}
+\caption{Full-wave bridge rectifier with R--C load.}
+\end{figure}
+
+% =====================================================================
+\section{Discussion and answers to questions}
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Why is a 1\,$\Omega$ resistor used to observe the current?}
+The oscilloscope only measures voltages. By Ohm's law $v_{1\Omega}=1\times i$,
+so the voltage across the 1\,$\Omega$ resistor has exactly the shape (and numerically
+the value) of the current. Being very small compared with $R_L=500\,\Omega$, it does not
+disturb the circuit.
+
+\item \textbf{Half-wave vs.\ full-wave with R load.}
+The bridge doubles $V_{dc}$ ($2V_m/\pi$ instead of $V_m/\pi$), reduces the ripple
+factor from 1.21 to 0.48, the form factor from 1.57 to 1.11, and doubles the efficiency
+(40.5\,\% $\to$ 81.1\,\%). The ripple frequency is 100\,Hz instead of 50\,Hz, which is
+easier to filter. Its drawback is two diode drops in series instead of one.
+
+\item \textbf{Effect of the capacitor.}
+The capacitor stores energy at the voltage peaks and feeds the load while the diodes
+are off; $V_{dc}$ rises close to $V_m$ and the ripple becomes very small
+($\Delta V\approx V_m/(fRC)$ for half-wave, $V_m/(2fRC)$ for full-wave).
+F.F.\ $\to1$, R.F.\ $\to$ about 1\,\% and $\eta\to100\,\%$. A larger $C$ or $R_L$
+(lighter load) gives less ripple. With the capacitor the bridge ripple is half of the
+half-wave ripple because the capacitor is recharged twice per period.
+
+\item \textbf{Shape of the current with the capacitor.}
+The diodes conduct only during a short interval before each peak (about $16^\circ$
+half-wave, $11^\circ$ full-wave), so the current is made of narrow, high pulses
+(amperes) although the average load current is only $\approx V_{dc}/R_L\approx65$\,mA.
+These pulses stress the diodes and the transformer and distort the supply current.
+
+\item \textbf{Diode voltage / PIV.}
+Half-wave R: PIV $=V_m\approx34$\,V. Half-wave R--C: PIV $=2V_m\approx68$\,V
+(the capacitor keeps the cathode at $+V_m$ while the anode goes to $-V_m$), so the
+diode must be rated for twice the peak voltage. Bridge (R or R--C): PIV $=V_m$.
+When conducting, the diode voltage is only $\approx0.7$\,V.
+
+\item \textbf{Why do the measured values differ from the theory?}
+Forward voltage drop of the diodes (0.7\,V, 1.4\,V in the bridge); voltage drop in the
+transformer winding resistance (the supply voltage falls when loaded, mainly during the
+current pulses with the capacitor); the 1\,$\Omega$ resistor and wiring resistance;
+the mains voltage is not exactly 24\,V\textsubscript{rms} nor perfectly sinusoidal;
+tolerances of $R_L$ and $C_L$ (electrolytic capacitors $\pm20\,\%$) and the ESR of the
+capacitor; accuracy and resolution of the oscilloscope measurements.
+
+\item \textbf{Why not display the bridge input and output at the same time?}
+The two probe grounds are connected together (and to earth) inside the oscilloscope.
+In a bridge, the input terminals and the output terminals do not share a common point,
+so connecting both grounds would short-circuit a diode. Each waveform is displayed
+separately (or a differential probe is used).
+\end{enumerate}
+
+% =====================================================================
+\section{Conclusion}
+In this experiment single-phase half-wave and full-wave (bridge) diode rectifiers were
+built and tested with R and R--C loads. With a pure resistive load the output is a
+pulsating DC voltage: the half-wave rectifier gives a low average value
+($V_{dc}\approx V_m/\pi$), a large ripple (R.F.\ $\approx1.21$) and a poor efficiency
+($\approx40\,\%$), whereas the bridge rectifier doubles the DC value, uses both half
+cycles, produces a 100\,Hz ripple (R.F.\ $\approx0.48$) and reaches $\approx81\,\%$
+efficiency. Adding the 1000\,$\mu$F filter capacitor raises the output close to the peak
+value ($\approx33$\,V) and reduces the ripple to around 1\,\% (half-wave) and 0.6\,\%
+(full-wave), the price being short, high charging current pulses in the diodes and, for
+the half-wave circuit, a diode reverse voltage of $2V_m$. The measured values agree with
+the theory, the small differences being explained mainly by the diode forward drops,
+the internal resistance of the source and the component tolerances. The full-wave
+bridge rectifier with capacitor filter is therefore the best of the four configurations
+for supplying a DC load.
+
+\end{document}
